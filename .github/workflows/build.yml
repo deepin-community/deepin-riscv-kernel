@@ -1,0 +1,191 @@
+name: build-kernel
+
+on:
+  push:
+    branches: [ master ]
+  schedule:
+    - cron: "0 2 * * *"
+  pull_request:
+  workflow_dispatch:
+
+env:
+  CROSS_COMPILE: riscv64-linux-gnu-
+  ARCH: riscv
+  KBUILD_BUILD_USER: deepin-riscv-sig
+  KBUILD_BUILD_HOST: deepin-riscv-builder
+  KDEB_COMPRESS: xz
+  KDEB_CHANGELOG_DIST: unstable
+  OUT_DIR: out
+  email: deepin-riscv@deepin.org
+
+permissions:
+  pull-requests: read
+
+jobs:
+  build-kernel:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - board: unmatched
+            kernel_branch: linux-6.2.y
+            kernel_git: git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
+            kernel_config: defconfig
+
+          - board: d1
+            kernel_branch: riscv/d1-wip
+            kernel_git: https://github.com/smaeul/linux.git
+            kernel_config: nezha_defconfig
+
+          - board: visionfive
+            kernel_branch: visionfive
+            kernel_git: https://github.com/starfive-tech/linux.git
+            kernel_config: visionfive_defconfig
+
+          - board: star64
+            kernel_branch: star64-5.15
+            kernel_git: https://github.com/Icenowy/linux.git
+            kernel_config: star64_defconfig
+
+          - board: visionfive2
+            kernel_branch: JH7110_VisionFive2_devel
+            kernel_git: https://github.com/starfive-tech/linux.git
+            kernel_config: starfive_visionfive2_defconfig
+
+          - board: mango
+            kernel_branch: sg2042-dev
+            kernel_git: https://github.com/sophgo/linux-riscv.git
+            kernel_config: sophgo_mango_ubuntu_defconfig
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Install Deps"
+        run: |
+          sudo apt update
+          sudo apt install -y gdisk dosfstools g++-12-riscv64-linux-gnu build-essential \
+                        libncurses-dev gawk flex bison openssl libssl-dev \
+                        dkms libelf-dev libudev-dev libpci-dev libiberty-dev autoconf mkbootimg \
+                        fakeroot genext2fs genisoimage libconfuse-dev mtd-utils mtools qemu-utils qemu-utils squashfs-tools \
+                        device-tree-compiler rauc simg2img u-boot-tools f2fs-tools arm-trusted-firmware-tools swig
+          sudo update-alternatives --install /usr/bin/riscv64-linux-gnu-gcc riscv64-gcc /usr/bin/riscv64-linux-gnu-gcc-12 10
+          sudo update-alternatives --install /usr/bin/riscv64-linux-gnu-g++ riscv64-g++ /usr/bin/riscv64-linux-gnu-g++-12 10
+          git config --global user.email $email
+          git config --global user.name $KBUILD_BUILD_USER
+
+      - name: "Clone Kernel"
+        run: git clone --depth=1 -b ${{ matrix.kernel_branch }} ${{ matrix.kernel_git }} kernel
+
+      - name: "Compile kernel"
+        run: |
+          pushd kernel
+            # fix vf2
+            if [[ ${{ matrix.board }} = 'visionfive2' ]]; then
+              wget https://github.com/starfive-tech/linux/commit/2f75442523e4b44bdea4ae5bc2e95137d0303c8b.patch 
+              git am 2f75442523e4b44bdea4ae5bc2e95137d0303c8b.patch
+              rm 2f75442523e4b44bdea4ae5bc2e95137d0303c8b.patch
+
+              # timeout x 2
+              # wget https://github.com/Rabenda/linux-starfive/commit/123b7009d4e1daed15a60a67863bee9ee1a2fd66.patch
+              # git am 123b7009d4e1daed15a60a67863bee9ee1a2fd66.patch
+              # rm 123b7009d4e1daed15a60a67863bee9ee1a2fd66.patch
+            fi
+
+            # fix unmatched
+            if [[ ${{ matrix.board }} = 'unmatched' ]]; then
+              wget https://salsa.debian.org/kernel-team/linux/-/raw/master/debian/config/riscv64/config
+              cat config >> arch/riscv/configs/${{ matrix.kernel_config }}
+            fi
+
+            make CROSS_COMPILE=${CROSS_COMPILE} ARCH=${ARCH} ${{ matrix.kernel_config }}
+            if [ -f ../config/${board}/kernelconfig ]; then
+              cp -v ../config/${board}/kernelconfig .config
+            fi
+                        
+            sed -i '/CONFIG_LOCALVERSION_AUTO/d' .config && echo "CONFIG_LOCALVERSION_AUTO=n" >> .config
+            make CROSS_COMPILE=${CROSS_COMPILE} ARCH=${ARCH} bindeb-pkg -j$(nproc) LOCALVERSION="-${{ matrix.board }}"
+          popd
+
+      - name: 'Upload Kernel Artifact'
+        uses: actions/upload-artifact@v3
+        with:
+          name: kernel-${{ matrix.board }}-deb
+          path: "*.deb"
+          retention-days: 3
+  
+  build-u-boot:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - board: unmatched
+            opensbi_branch: v1.2
+            opensbi_git: https://github.com/riscv-software-src/opensbi.git
+            uboot_branch: v2023.04-rc2
+            uboot_git: https://github.com/u-boot/u-boot.git
+            uboot_config: sifive_unmatched_defconfig
+
+          - board: d1
+            opensbi_branch: d1-wip
+            opensbi_git: https://github.com/smaeul/opensbi.git
+            uboot_branch: d1-wip
+            uboot_git: https://github.com/smaeul/u-boot.git
+            uboot_config: nezha_defconfig
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Install Deps"
+        run: |
+          sudo apt update
+          sudo apt install -y gdisk dosfstools g++-12-riscv64-linux-gnu build-essential \
+                        libncurses-dev gawk flex bison openssl libssl-dev \
+                        dkms libelf-dev libudev-dev libpci-dev libiberty-dev autoconf mkbootimg \
+                        fakeroot genext2fs genisoimage libconfuse-dev mtd-utils mtools qemu-utils qemu-utils squashfs-tools \
+                        device-tree-compiler rauc simg2img u-boot-tools f2fs-tools arm-trusted-firmware-tools swig
+          sudo update-alternatives --install /usr/bin/riscv64-linux-gnu-gcc riscv64-gcc /usr/bin/riscv64-linux-gnu-gcc-12 10
+          sudo update-alternatives --install /usr/bin/riscv64-linux-gnu-g++ riscv64-g++ /usr/bin/riscv64-linux-gnu-g++-12 10
+          git config --global user.email $email
+          git config --global user.name $KBUILD_BUILD_USER
+
+      - name: out
+        run: mkdir ${OUT_DIR}
+
+      - name: "Clone opensbi"
+        run: git clone --depth=1 -b ${{ matrix.opensbi_branch }} ${{ matrix.opensbi_git }} opensbi
+
+      - name: "Compile opensbi"
+        run: |
+          pushd opensbi
+            if [[ ${{ matrix.board }} = 'd1' ]]; then
+              make CROSS_COMPILE="${CROSS_COMPILE}" PLATFORM=generic FW_PIC=y FW_OPTIONS=0x2
+            else
+              make CROSS_COMPILE="${CROSS_COMPILE}" PLATFORM=generic
+            fi
+          popd
+          cp opensbi/build/platform/generic/firmware/fw_dynamic.bin ${OUT_DIR}
+
+      - name: "Clone u-boot"
+        run: git clone --depth=1 -b ${{ matrix.uboot_branch }} ${{ matrix.uboot_git }} u-boot
+
+      - name: "Compile u-boot"
+        run: |
+          pushd u-boot
+            make CROSS_COMPILE="${CROSS_COMPILE}" ARCH="${ARCH}" ${{ matrix.uboot_config }}
+            make CROSS_COMPILE="${CROSS_COMPILE}" ARCH="${ARCH}" OPENSBI="../${OUT_DIR}/fw_dynamic.bin" -j$(nproc)
+
+            if [[ ${{ matrix.board }} = 'd1' ]]; then
+              cp -v u-boot-sunxi-with-spl.bin "../${OUT_DIR}"
+            elif [[ ${{ matrix.board }} = 'unmatched' ]]; then
+              cp -v spl/u-boot-spl.bin "../${OUT_DIR}"
+              cp -v u-boot.itb "../${OUT_DIR}"
+            else
+              echo "No board"
+              exit -1
+            fi
+          popd
+          
+      - name: 'Upload u-boot Artifact'
+        uses: actions/upload-artifact@v3
+        with:
+          name: u-boot-${{ matrix.board }}
+          path: "${OUT_DIR}/*"
+          retention-days: 3
