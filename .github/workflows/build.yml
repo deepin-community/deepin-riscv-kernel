@@ -78,18 +78,6 @@ jobs:
       - name: "Compile kernel"
         run: |
           pushd kernel
-            # fix vf2
-            if [[ ${{ matrix.board }} = 'visionfive2' ]]; then
-              wget https://github.com/starfive-tech/linux/commit/2f75442523e4b44bdea4ae5bc2e95137d0303c8b.patch 
-              git am 2f75442523e4b44bdea4ae5bc2e95137d0303c8b.patch
-              rm 2f75442523e4b44bdea4ae5bc2e95137d0303c8b.patch
-
-              # timeout x 2
-              # wget https://github.com/Rabenda/linux-starfive/commit/123b7009d4e1daed15a60a67863bee9ee1a2fd66.patch
-              # git am 123b7009d4e1daed15a60a67863bee9ee1a2fd66.patch
-              # rm 123b7009d4e1daed15a60a67863bee9ee1a2fd66.patch
-            fi
-
             # fix unmatched
             if [[ ${{ matrix.board }} = 'unmatched' ]]; then
               wget https://salsa.debian.org/kernel-team/linux/-/raw/master/debian/config/riscv64/config
