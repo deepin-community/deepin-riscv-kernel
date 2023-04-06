@@ -59,6 +59,7 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
       - name: "Install Deps"
         run: |
           sudo apt update
