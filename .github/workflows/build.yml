@@ -93,7 +93,7 @@ jobs:
             # fix drivers if not mango
             if [[ ${{ matrix.board }} != 'mango' ]]; then
             # fix d1 board for compile error
-              if [[ ${{ matrix.board }} == 'd1' ]]; then
+              if [[ ${{ matrix.board }} = 'd1' ]]; then
                 sed -i '/CONFIG_INPUT_JOYSTICK/d' ../common_driver_defconfig
                 sed -i '/CONFIG_JOYSTICK/d' ../common_driver_defconfig
               fi
