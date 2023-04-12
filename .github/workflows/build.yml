@@ -89,6 +89,11 @@ jobs:
             if [[ ${{ matrix.board }} = 'mango' ]]; then
               cp ../sophgo_mango_ubuntu_defconfig arch/riscv/configs/${{ matrix.kernel_config }}
             fi
+            
+            # fix drivers if not mango
+            if [[ ${{ matrix.board }} != 'mango' ]]; then
+              cat ../common_driver_defconfig >> arch/riscv/configs/${{ matrix.kernel_config }}
+            fi
 
             make CROSS_COMPILE=${CROSS_COMPILE} ARCH=${ARCH} ${{ matrix.kernel_config }}
             if [ -f ../config/${board}/kernelconfig ]; then
