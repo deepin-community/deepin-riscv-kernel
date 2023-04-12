@@ -92,10 +92,12 @@ jobs:
             
             # fix drivers if not mango
             if [[ ${{ matrix.board }} != 'mango' ]]; then
-            # TODO:skip d1 board for compile error
-              if [[ ${{ matrix.board }} != 'd1' ]]; then
-                cat ../common_driver_defconfig >> arch/riscv/configs/${{ matrix.kernel_config }}
+            # fix d1 board for compile error
+              if [[ ${{ matrix.board }} == 'd1' ]]; then
+                sed -i '/CONFIG_INPUT_JOYSTICK/d' ../common_driver_defconfig
+                sed -i '/CONFIG_JOYSTICK/d' ../common_driver_defconfig
               fi
+              cat ../common_driver_defconfig >> arch/riscv/configs/${{ matrix.kernel_config }}
             fi
 
             make CROSS_COMPILE=${CROSS_COMPILE} ARCH=${ARCH} ${{ matrix.kernel_config }}
