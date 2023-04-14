@@ -124,7 +124,7 @@ jobs:
           - board: unmatched
             opensbi_branch: v1.2
             opensbi_git: https://github.com/riscv-software-src/opensbi.git
-            uboot_branch: v2023.04-rc2
+            uboot_branch: v2023.04
             uboot_git: https://github.com/u-boot/u-boot.git
             uboot_config: sifive_unmatched_defconfig
 
