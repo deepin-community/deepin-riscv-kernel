@@ -106,6 +106,9 @@ jobs:
             fi
                         
             sed -i '/CONFIG_LOCALVERSION_AUTO/d' .config && echo "CONFIG_LOCALVERSION_AUTO=n" >> .config
+            
+            # enable CONFIG_DEBUG_INFO_DWARF5 to generate dbg deb with dwarf5 format
+            echo CONFIG_DEBUG_INFO_DWARF5=y >> .config
             make CROSS_COMPILE=${CROSS_COMPILE} ARCH=${ARCH} bindeb-pkg -j$(nproc) LOCALVERSION="-${{ matrix.board }}"
           popd
 
