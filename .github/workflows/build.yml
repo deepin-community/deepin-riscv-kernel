@@ -90,15 +90,14 @@ jobs:
               cp ../sophgo_mango_ubuntu_defconfig arch/riscv/configs/${{ matrix.kernel_config }}
             fi
 
+            # enable CONFIG_DEBUG_INFO_DWARF5 to generate dbg deb with dwarf5 format
+            echo CONFIG_DEBUG_INFO_DWARF5=y >> arch/riscv/configs/${{ matrix.kernel_config }}
             make CROSS_COMPILE=${CROSS_COMPILE} ARCH=${ARCH} ${{ matrix.kernel_config }}
             if [ -f ../config/${board}/kernelconfig ]; then
               cp -v ../config/${board}/kernelconfig .config
             fi
                         
             sed -i '/CONFIG_LOCALVERSION_AUTO/d' .config && echo "CONFIG_LOCALVERSION_AUTO=n" >> .config
-            
-            # enable CONFIG_DEBUG_INFO_DWARF5 to generate dbg deb with dwarf5 format
-            echo CONFIG_DEBUG_INFO_DWARF5=y >> .config
             make CROSS_COMPILE=${CROSS_COMPILE} ARCH=${ARCH} bindeb-pkg -j$(nproc) LOCALVERSION="-${{ matrix.board }}"
           popd
 
