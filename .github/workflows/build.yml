@@ -100,6 +100,8 @@ jobs:
               cat ../common_driver_defconfig >> arch/riscv/configs/${{ matrix.kernel_config }}
             fi
 
+            # enable all cgroup feature
+            cat ../cgroup_defconfig >> arch/riscv/configs/${{ matrix.kernel_config }}
             # enable CONFIG_DEBUG_INFO_DWARF5 to generate dbg deb with dwarf5 format
             echo CONFIG_DEBUG_INFO_DWARF5=y >> arch/riscv/configs/${{ matrix.kernel_config }}
             make CROSS_COMPILE=${CROSS_COMPILE} ARCH=${ARCH} ${{ matrix.kernel_config }}
