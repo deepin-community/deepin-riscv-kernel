@@ -1,0 +1,35 @@
+CONFIG_CGROUPS=y
+# Memory controller
+CONFIG_MEMCG=y
+# IO controller
+CONFIG_BLK_CGROUP=y
+# CPU controller
+CONFIG_CGROUP_SCHED=y
+# PIDs controller
+CONFIG_CGROUP_PIDS=y
+# RDMA controller
+CONFIG_CGROUP_RDMA=y
+# Freezer controller
+CONFIG_CGROUP_FREEZER=y
+# HugeTLB controller
+CONFIG_CGROUP_HUGETLB=y
+# Cpuset controller
+CONFIG_CPUSETS=y
+# /proc/<pid>/cpuset file
+CONFIG_PROC_PID_CPUSET=y
+# Device controller
+CONFIG_CGROUP_DEVICE=y
+# CPU account controller
+CONFIG_CGROUP_CPUACCT=y
+# Perf controller
+CONFIG_CGROUP_PERF=y
+# eBPF attatched to cgroups
+CONFIG_CGROUP_BPF=y
+# Enable support for cost model based cgroup IO controller
+CONFIG_BLK_CGROUP_IOCOST=y
+# classify packets based on the control cgroup of their process
+CONFIG_NET_CLS_CGROUP=m
+# Network priority cgroup
+CONFIG_CGROUP_NET_PRIO=y
+# Network classid cgroup
+CONFIG_CGROUP_NET_CLASSID=y
