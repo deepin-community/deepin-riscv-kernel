@@ -32,16 +32,6 @@ jobs:
             kernel_git: git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
             kernel_config: defconfig
 
-          - board: d1
-            kernel_branch: riscv/d1-wip
-            kernel_git: https://github.com/smaeul/linux.git
-            kernel_config: nezha_defconfig
-
-          - board: visionfive
-            kernel_branch: visionfive
-            kernel_git: https://github.com/starfive-tech/linux.git
-            kernel_config: visionfive_defconfig
-
           - board: star64
             kernel_branch: star64-5.15
             kernel_git: https://github.com/Icenowy/linux.git
@@ -92,11 +82,6 @@ jobs:
             
             # fix drivers if not mango
             if [[ ${{ matrix.board }} != 'mango' ]]; then
-            # fix d1 board for compile error
-              if [[ ${{ matrix.board }} = 'd1' ]]; then
-                sed -i '/CONFIG_INPUT_JOYSTICK/d' ../common_driver_defconfig
-                sed -i '/CONFIG_JOYSTICK/d' ../common_driver_defconfig
-              fi
               cat ../common_driver_defconfig >> arch/riscv/configs/${{ matrix.kernel_config }}
             fi
 
@@ -134,13 +119,6 @@ jobs:
             uboot_git: https://github.com/u-boot/u-boot.git
             uboot_config: sifive_unmatched_defconfig
 
-          - board: d1
-            opensbi_branch: d1-wip
-            opensbi_git: https://github.com/smaeul/opensbi.git
-            uboot_branch: d1-wip
-            uboot_git: https://github.com/smaeul/u-boot.git
-            uboot_config: nezha_defconfig
-
     runs-on: ubuntu-latest
     steps:
       - name: "Install Deps"
@@ -165,11 +143,7 @@ jobs:
       - name: "Compile opensbi"
         run: |
           pushd opensbi
-            if [[ ${{ matrix.board }} = 'd1' ]]; then
-              make CROSS_COMPILE="${CROSS_COMPILE}" PLATFORM=generic FW_PIC=y FW_OPTIONS=0x2
-            else
-              make CROSS_COMPILE="${CROSS_COMPILE}" PLATFORM=generic
-            fi
+            make CROSS_COMPILE="${CROSS_COMPILE}" PLATFORM=generic
           popd
           cp opensbi/build/platform/generic/firmware/fw_dynamic.bin ${OUT_DIR}
 
@@ -182,9 +156,7 @@ jobs:
             make CROSS_COMPILE="${CROSS_COMPILE}" ARCH="${ARCH}" ${{ matrix.uboot_config }}
             make CROSS_COMPILE="${CROSS_COMPILE}" ARCH="${ARCH}" OPENSBI="../${OUT_DIR}/fw_dynamic.bin" -j$(nproc)
 
-            if [[ ${{ matrix.board }} = 'd1' ]]; then
-              cp -v u-boot-sunxi-with-spl.bin "../${OUT_DIR}"
-            elif [[ ${{ matrix.board }} = 'unmatched' ]]; then
+            if [[ ${{ matrix.board }} = 'unmatched' ]]; then
               cp -v spl/u-boot-spl.bin "../${OUT_DIR}"
               cp -v u-boot.itb "../${OUT_DIR}"
             else
