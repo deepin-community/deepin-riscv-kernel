@@ -27,7 +27,7 @@ jobs:
       matrix:
         include:
           - board: unmatched
-            kernel_branch: linux-6.2.y
+            kernel_branch: linux-6.4.y
             kernel_git: git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
             kernel_config: defconfig
 
@@ -71,7 +71,7 @@ jobs:
                         libncurses-dev gawk flex bison openssl libssl-dev \
                         dkms libelf-dev pahole libudev-dev libpci-dev libiberty-dev autoconf mkbootimg \
                         fakeroot genext2fs genisoimage libconfuse-dev mtd-utils mtools qemu-utils qemu-utils squashfs-tools \
-                        device-tree-compiler rauc simg2img u-boot-tools f2fs-tools arm-trusted-firmware-tools swig
+                        device-tree-compiler rauc simg2img u-boot-tools f2fs-tools arm-trusted-firmware-tools swig debhelper
           sudo update-alternatives --install /usr/bin/riscv64-linux-gnu-gcc riscv64-gcc /usr/bin/riscv64-linux-gnu-gcc-12 10
           sudo update-alternatives --install /usr/bin/riscv64-linux-gnu-g++ riscv64-g++ /usr/bin/riscv64-linux-gnu-g++-12 10
           git config --global user.email $email
