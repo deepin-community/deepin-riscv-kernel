@@ -50,6 +50,11 @@ jobs:
             kernel_git: https://github.com/sophgo/linux-riscv.git
             kernel_config: sophgo_mango_ubuntu_defconfig
 
+          - board: th1520
+            kernel_branch: lpi4a
+            kernel_git: https://github.com/revyos/thead-kernel.git
+            kernel_config: revyos_defconfig
+
     runs-on: ubuntu-latest
     steps:
       - name: Free Disk Space (Ubuntu)
