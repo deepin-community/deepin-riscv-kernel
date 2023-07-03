@@ -2,7 +2,6 @@ name: build-kernel
 
 on:
   push:
-    branches: [ master ]
   schedule:
     - cron: "0 2 * * *"
   pull_request:
@@ -32,7 +31,7 @@ jobs:
       matrix:
         include:
           - board: unmatched
-            kernel_branch: linux-6.2.y
+            kernel_branch: linux-6.4.y
             kernel_git: git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
             kernel_config: defconfig
 
@@ -53,6 +52,21 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+          # this might remove tools that are actually needed,
+          # if set to "true" but frees about 6 GB
+          tool-cache: true
+          # all of these default to true, but feel free to set to
+          # "false" if necessary for your workflow
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: true
+
       - uses: actions/checkout@v3
       - name: "Install Deps"
         run: |
@@ -61,7 +75,8 @@ jobs:
                         libncurses-dev gawk flex bison openssl libssl-dev \
                         dkms libelf-dev pahole libudev-dev libpci-dev libiberty-dev autoconf mkbootimg \
                         fakeroot genext2fs genisoimage libconfuse-dev mtd-utils mtools qemu-utils qemu-utils squashfs-tools \
-                        device-tree-compiler rauc simg2img u-boot-tools f2fs-tools arm-trusted-firmware-tools swig ccache
+                        device-tree-compiler rauc simg2img u-boot-tools f2fs-tools arm-trusted-firmware-tools swig ccache debhelper
+
           sudo update-alternatives --install /usr/bin/riscv64-linux-gnu-gcc riscv64-gcc /usr/bin/riscv64-linux-gnu-gcc-12 10
           sudo update-alternatives --install /usr/bin/riscv64-linux-gnu-g++ riscv64-g++ /usr/bin/riscv64-linux-gnu-g++-12 10
           git config --global user.email $email
@@ -94,15 +109,8 @@ jobs:
               cat config >> arch/riscv/configs/${{ matrix.kernel_config }}
             fi
             
-            # fix mango
-            if [[ ${{ matrix.board }} = 'mango' ]]; then
-              cp ../sophgo_mango_ubuntu_defconfig arch/riscv/configs/${{ matrix.kernel_config }}
-            fi
-            
-            # fix drivers if not mango
-            if [[ ${{ matrix.board }} != 'mango' ]]; then
-              cat ../common_driver_defconfig >> arch/riscv/configs/${{ matrix.kernel_config }}
-            fi
+            # fix drivers
+            cat ../common_driver_defconfig >> arch/riscv/configs/${{ matrix.kernel_config }}
 
             # enable all bpf feature
             cat ../bpf_defconfig >> arch/riscv/configs/${{ matrix.kernel_config }}
