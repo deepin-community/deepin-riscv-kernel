@@ -9,6 +9,10 @@ on:
 
 env:
   CROSS_COMPILE: riscv64-linux-gnu-
+  # for ccache
+  GCC: riscv64-linux-gnu-gcc
+  CCACHE_DIR: /tmp/runnerccache
+  CCACHE_COMPILERTYPE: gcc
   ARCH: riscv
   KBUILD_BUILD_USER: deepin-riscv-sig
   KBUILD_BUILD_HOST: deepin-riscv-builder
@@ -71,11 +75,27 @@ jobs:
                         libncurses-dev gawk flex bison openssl libssl-dev \
                         dkms libelf-dev pahole libudev-dev libpci-dev libiberty-dev autoconf mkbootimg \
                         fakeroot genext2fs genisoimage libconfuse-dev mtd-utils mtools qemu-utils qemu-utils squashfs-tools \
-                        device-tree-compiler rauc simg2img u-boot-tools f2fs-tools arm-trusted-firmware-tools swig debhelper
+                        device-tree-compiler rauc simg2img u-boot-tools f2fs-tools arm-trusted-firmware-tools swig ccache debhelper
+
           sudo update-alternatives --install /usr/bin/riscv64-linux-gnu-gcc riscv64-gcc /usr/bin/riscv64-linux-gnu-gcc-12 10
           sudo update-alternatives --install /usr/bin/riscv64-linux-gnu-g++ riscv64-g++ /usr/bin/riscv64-linux-gnu-g++-12 10
           git config --global user.email $email
           git config --global user.name $KBUILD_BUILD_USER
+          # prepare ccache
+          mkdir -p $CCACHE_DIR
+          ccache -F 0 -M 2GiB
+          ccache -s
+  
+      # https://github.com/actions/cache/blob/main/restore/README.md
+      - name: Restore linux build cache
+        id: restore
+        uses: actions/cache/restore@v3
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ runner.os }}-kernel-${{ matrix.board }}-${{ env.GCC }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-kernel-${{ matrix.board }}-${{ env.GCC }}-
+            ${{ runner.os }}-kernel-${{ matrix.board }}-
 
       - name: "Clone Kernel"
         run: git clone --depth=1 -b ${{ matrix.kernel_branch }} ${{ matrix.kernel_git }} kernel
@@ -98,15 +118,30 @@ jobs:
             cat ../cgroup_defconfig >> arch/riscv/configs/${{ matrix.kernel_config }}
             # enable CONFIG_DEBUG_INFO_DWARF5 to generate dbg deb with dwarf5 format
             echo CONFIG_DEBUG_INFO_DWARF5=y >> arch/riscv/configs/${{ matrix.kernel_config }}
-            make CROSS_COMPILE=${CROSS_COMPILE} ARCH=${ARCH} ${{ matrix.kernel_config }}
-
+            # add ccache
+            make CROSS_COMPILE="ccache ${CROSS_COMPILE}" ARCH=${ARCH} ${{ matrix.kernel_config }}
             if [ -f ../config/${board}/kernelconfig ]; then
               cp -v ../config/${board}/kernelconfig .config
             fi
                         
             sed -i '/CONFIG_LOCALVERSION_AUTO/d' .config && echo "CONFIG_LOCALVERSION_AUTO=n" >> .config
-            make CROSS_COMPILE=${CROSS_COMPILE} ARCH=${ARCH} bindeb-pkg -j$(nproc) LOCALVERSION="-${{ matrix.board }}"
+            # add ccache
+            make CROSS_COMPILE="ccache ${CROSS_COMPILE}" ARCH=${ARCH} bindeb-pkg -j$(nproc) LOCALVERSION="-${{ matrix.board }}"
           popd
+
+      - name: Check ccache
+        run: |
+          ccache -s
+          du -hd0 $CCACHE_DIR
+
+      # https://github.com/actions/cache/blob/main/save/README.md
+      - name: Save linux build cache
+        id: cache
+        if: ${{ github.event_name }} == "workflow_dispatch"
+        uses: actions/cache/save@v3
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ runner.os }}-kernel-${{ matrix.board }}-${{ env.GCC }}-${{ github.sha }}
 
       - name: 'Upload Kernel Artifact'
         uses: actions/upload-artifact@v3
