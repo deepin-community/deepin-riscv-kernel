@@ -83,7 +83,12 @@ jobs:
           git config --global user.name $KBUILD_BUILD_USER
           # prepare ccache
           mkdir -p $CCACHE_DIR
-          ccache -F 0 -M 2GiB
+          # we need to blance cache size between board
+          ccache -F 0 -M 1GiB
+          # try give mango more cache size
+          if [[ ${{ matrix.board }} = 'mango' ]]; then
+              ccache -F 0 -M 4GiB
+          fi
           ccache -s
   
       # https://github.com/actions/cache/blob/main/restore/README.md
