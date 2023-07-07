@@ -112,6 +112,8 @@ jobs:
             # fix drivers
             cat ../common_driver_defconfig >> arch/riscv/configs/${{ matrix.kernel_config }}
 
+            # enable net subsystem feature
+            cat ../net_defconfig >> arch/riscv/configs/${{ matrix.kernel_config }}
             # enable all bpf feature
             cat ../bpf_defconfig >> arch/riscv/configs/${{ matrix.kernel_config }}
             # enable all cgroup feature
