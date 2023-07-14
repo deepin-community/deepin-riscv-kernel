@@ -57,6 +57,10 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
+      - name: "Update APT sources"
+        run: |
+          sudo apt update
+
       - name: Free Disk Space (Ubuntu)
         uses: jlumbroso/free-disk-space@main
         with:
@@ -75,7 +79,6 @@ jobs:
       - uses: actions/checkout@v3
       - name: "Install Deps"
         run: |
-          sudo apt update
           sudo apt install -y gdisk dosfstools g++-12-riscv64-linux-gnu build-essential \
                         libncurses-dev gawk flex bison openssl libssl-dev \
                         dkms libelf-dev pahole libudev-dev libpci-dev libiberty-dev autoconf mkbootimg \
