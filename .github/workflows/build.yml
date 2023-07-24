@@ -121,33 +121,38 @@ jobs:
               wget https://salsa.debian.org/kernel-team/linux/-/raw/master/debian/config/riscv64/config
               cat config >> arch/riscv/configs/${{ matrix.kernel_config }}
             fi
+            # add ccache and create .config
+            make CROSS_COMPILE="ccache ${CROSS_COMPILE}" ARCH=${ARCH} ${{ matrix.kernel_config }}
             
             if [[ ${{ matrix.board }} = 'visionfive2' ]]; then
-              cat ../gpu_driver_defconfig >> arch/riscv/configs/${{ matrix.kernel_config }}
+              cat ../gpu_driver_defconfig >> .tmpconfig
             fi       
             
-            # fix lpi4a
+            # fix lpi4a drivers in common_driver_defconfig
             if [[ ${{ matrix.board }} = 'th1520' ]]; then
               sed -i '/UART/d' ../common_driver_defconfig
             fi
             
             # fix drivers
-            cat ../common_driver_defconfig >> arch/riscv/configs/${{ matrix.kernel_config }}
-
+            cat ../common_driver_defconfig >> .tmpconfig
             # enable net subsystem feature
-            cat ../net_defconfig >> arch/riscv/configs/${{ matrix.kernel_config }}
+            cat ../net_defconfig >> .tmpconfig
             # enable all bpf feature
-            cat ../bpf_defconfig >> arch/riscv/configs/${{ matrix.kernel_config }}
+            cat ../bpf_defconfig >> .tmpconfig
             # enable all cgroup feature
-            cat ../cgroup_defconfig >> arch/riscv/configs/${{ matrix.kernel_config }}
+            cat ../cgroup_defconfig >> .tmpconfig
             # enable CONFIG_DEBUG_INFO_DWARF5 to generate dbg deb with dwarf5 format
-            echo CONFIG_DEBUG_INFO_DWARF5=y >> arch/riscv/configs/${{ matrix.kernel_config }}
-            # add ccache
-            make CROSS_COMPILE="ccache ${CROSS_COMPILE}" ARCH=${ARCH} ${{ matrix.kernel_config }}
+            echo CONFIG_DEBUG_INFO_DWARF5=y >> .tmpconfig
+            
+            # merge to .config
+            scripts/kconfig/merge_config.sh -m .config .tmpconfig
+            
+            # override .config if ../config/${board}/kernelconfig file exist
             if [ -f ../config/${board}/kernelconfig ]; then
               cp -v ../config/${board}/kernelconfig .config
             fi
-                        
+            
+            # version config
             sed -i '/CONFIG_LOCALVERSION_AUTO/d' .config && echo "CONFIG_LOCALVERSION_AUTO=n" >> .config
             # add ccache
             make CROSS_COMPILE="ccache ${CROSS_COMPILE}" ARCH=${ARCH} bindeb-pkg -j$(nproc) LOCALVERSION="-${{ matrix.board }}"
