@@ -154,6 +154,8 @@ jobs:
             
             # version config
             sed -i '/CONFIG_LOCALVERSION_AUTO/d' .config && echo "CONFIG_LOCALVERSION_AUTO=n" >> .config
+            # If config restart, use default config
+            make CROSS_COMPILE="ccache ${CROSS_COMPILE}" ARCH=${ARCH} olddefconfig
             # add ccache
             make CROSS_COMPILE="ccache ${CROSS_COMPILE}" ARCH=${ARCH} bindeb-pkg -j$(nproc) LOCALVERSION="-${{ matrix.board }}"
           popd
