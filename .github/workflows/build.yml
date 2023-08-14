@@ -122,6 +122,10 @@ jobs:
               cat config >> arch/riscv/configs/${{ matrix.kernel_config }}
             fi
             
+            if [[ ${{ matrix.board }} = 'visionfive2' ]]; then
+              cat ../gpu_driver_defconfig >> arch/riscv/configs/${{ matrix.kernel_config }}
+            fi       
+            
             # fix lpi4a
             if [[ ${{ matrix.board }} = 'th1520' ]]; then
               sed -i '/UART/d' ../common_driver_defconfig
