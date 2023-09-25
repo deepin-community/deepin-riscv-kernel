@@ -131,6 +131,7 @@ jobs:
             # fix lpi4a drivers in common_driver_defconfig
             if [[ ${{ matrix.board }} = 'th1520' ]]; then
               sed -i '/UART/d' ../common_driver_defconfig
+              sed -i '/80211/d' ../common_driver_defconfig
             fi
             
             # fix drivers
