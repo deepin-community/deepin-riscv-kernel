@@ -126,6 +126,7 @@ jobs:
             
             if [[ ${{ matrix.board }} = 'visionfive2' ]]; then
               cat ../gpu_driver_defconfig >> .tmpconfig
+              echo "CONFIG_IIO_BUFFER=y" >> .tmpconfig
             fi       
             
             # fix lpi4a drivers in common_driver_defconfig
