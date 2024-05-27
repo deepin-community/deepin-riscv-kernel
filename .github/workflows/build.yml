@@ -51,6 +51,11 @@ jobs:
             kernel_git: https://github.com/starfive-tech/linux.git
             kernel_config: starfive_visionfive2_defconfig
 
+          - board: visionfive2-66y
+            kernel_branch: JH7110_VisionFive2_6.6.y_devel
+            kernel_git: https://github.com/starfive-tech/linux.git
+            kernel_config: starfive_visionfive2_defconfig
+
           - board: visionfive2-upstream
             kernel_branch: JH7110_VisionFive2_upstream
             kernel_git: https://github.com/starfive-tech/linux.git
@@ -65,6 +70,17 @@ jobs:
             kernel_branch: lpi4a
             kernel_git: https://github.com/revyos/thead-kernel.git
             kernel_config: revyos_defconfig
+
+          - board: milkv-mars
+            kernel_branch: dev
+            kernel_git: https://github.com/milkv-mars/mars-buildroot-sdk.git
+            kernel_config: starfive_visionfive2_defconfig
+            subdirectory: linux
+
+          - board: spacemit-k1
+            kernel_branch: bl-v1.0.y
+            kernel_git: https://gitee.com/bianbu-linux/linux-6.1
+            kernel_config: k1_defconfig
 
     runs-on: ubuntu-latest
     steps:
