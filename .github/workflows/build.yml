@@ -125,7 +125,9 @@ jobs:
             ${{ runner.os }}-kernel-${{ matrix.board }}-
 
       - name: "Clone Kernel"
-        run: git clone --depth=1 -b ${{ matrix.kernel_branch }} ${{ matrix.kernel_git }} kernel
+        run: |
+          export GIT_CLONE_PROTECTION_ACTIVE=false
+          git clone --depth=1 -b ${{ matrix.kernel_branch }} ${{ matrix.kernel_git }} kernel
 
       - name: "Move Kernel Subdirectory"
         if: ${{ matrix.subdirectory }}
