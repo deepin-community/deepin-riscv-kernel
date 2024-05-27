@@ -203,9 +203,9 @@ jobs:
       matrix:
         include:
           - board: unmatched
-            opensbi_branch: v1.3.1
+            opensbi_branch: v1.4
             opensbi_git: https://github.com/riscv-software-src/opensbi.git
-            uboot_branch: v2023.10-rc2
+            uboot_branch: v2024.07-rc2
             uboot_git: https://github.com/u-boot/u-boot.git
             uboot_config: sifive_unmatched_defconfig
 
@@ -259,5 +259,5 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: u-boot-${{ matrix.board }}
-          path: "${OUT_DIR}/*"
+          path: "${{ env.OUT_DIR }}/*"
           retention-days: 3
