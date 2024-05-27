@@ -127,6 +127,12 @@ jobs:
       - name: "Clone Kernel"
         run: git clone --depth=1 -b ${{ matrix.kernel_branch }} ${{ matrix.kernel_git }} kernel
 
+      - name: "Move Kernel Subdirectory"
+        if: ${{ matrix.subdirectory }}
+        run: |
+          mv kernel kernel-git
+          mv kernel-git/${{ matrix.subdirectory }} ./kernel
+
       - name: "Compile kernel"
         run: |
           pushd kernel
