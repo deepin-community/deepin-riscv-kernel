@@ -11,6 +11,7 @@ env:
   CROSS_COMPILE: riscv64-linux-gnu-
   # for ccache
   GCC: riscv64-linux-gnu-gcc
+  GCC_VERSION: 12
   CCACHE_DIR: /tmp/runnerccache
   CCACHE_COMPILERTYPE: gcc
   ARCH: riscv
@@ -88,15 +89,18 @@ jobs:
 
       - uses: actions/checkout@v3
       - name: "Install Deps"
+        env:
+          GCC_VER_OVERRIDE: ${{ matrix.gcc_version }}
         run: |
-          sudo apt install -y gdisk dosfstools g++-12-riscv64-linux-gnu build-essential \
+          test $GCC_VER_OVERRIDE && export GCC_VER=$GCC_VER_OVERRIDE || export GCC_VER=${{ env.GCC_VERSION }}
+          sudo apt install -y gdisk dosfstools g++-${GCC_VER}-riscv64-linux-gnu build-essential \
                         libncurses-dev gawk flex bison openssl libssl-dev \
                         dkms libelf-dev pahole libudev-dev libpci-dev libiberty-dev autoconf mkbootimg \
                         fakeroot genext2fs genisoimage libconfuse-dev mtd-utils mtools squashfs-tools \
                         device-tree-compiler rauc simg2img u-boot-tools swig ccache debhelper
 
-          sudo update-alternatives --install /usr/bin/riscv64-linux-gnu-gcc riscv64-gcc /usr/bin/riscv64-linux-gnu-gcc-12 10
-          sudo update-alternatives --install /usr/bin/riscv64-linux-gnu-g++ riscv64-g++ /usr/bin/riscv64-linux-gnu-g++-12 10
+          sudo update-alternatives --install /usr/bin/riscv64-linux-gnu-gcc riscv64-gcc /usr/bin/riscv64-linux-gnu-gcc-${GCC_VER} 10
+          sudo update-alternatives --install /usr/bin/riscv64-linux-gnu-g++ riscv64-g++ /usr/bin/riscv64-linux-gnu-g++-${GCC_VER} 10
           git config --global user.email $email
           git config --global user.name $KBUILD_BUILD_USER
           # prepare ccache
