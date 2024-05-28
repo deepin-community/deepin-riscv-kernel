@@ -50,11 +50,13 @@ jobs:
             kernel_branch: JH7110_VisionFive2_6.1.y_devel
             kernel_git: https://github.com/starfive-tech/linux.git
             kernel_config: starfive_visionfive2_defconfig
+            kernel_patchset: visionfive2
 
           - board: visionfive2-66y
             kernel_branch: JH7110_VisionFive2_6.6.y_devel
             kernel_git: https://github.com/starfive-tech/linux.git
             kernel_config: starfive_visionfive2_defconfig
+            kernel_patchset: visionfive2
 
           - board: visionfive2-upstream
             kernel_branch: JH7110_VisionFive2_upstream
@@ -150,6 +152,22 @@ jobs:
         run: |
           mv kernel kernel-git
           mv kernel-git/${{ matrix.subdirectory }} ./kernel
+
+      - name: "Apply patches (if any)"
+        env:
+          PATCHSET_OVERRIDE: ${{ matrix.kernel_patchset }}
+        run: |
+          if [ -d patches/common ]; then
+            for patchfile in patches/common/*.patch; do
+              patch -d ./kernel -p1 < $patchfile
+            done
+          fi
+          test $PATCHSET_OVERRIDE && export PATCHSET=$PATCHSET_OVERRIDE || export PATCHSET=${{ matrix.board }}
+          if [ -d patches/"$PATCHSET" ]; then
+            for patchfile in patches/"$PATCHSET"/*.patch; do
+              patch -d ./kernel -p1 < $patchfile
+            done
+          fi
 
       - name: "Compile kernel"
         run: |
