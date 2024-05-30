@@ -58,11 +58,6 @@ jobs:
             kernel_config: starfive_visionfive2_defconfig
             kernel_patchset: visionfive2
 
-          - board: visionfive2-upstream
-            kernel_branch: JH7110_VisionFive2_upstream
-            kernel_git: https://github.com/starfive-tech/linux.git
-            kernel_config: starfive_visionfive2_defconfig
-
           - board: mango
             kernel_branch: sg2042-dev
             kernel_git: https://github.com/sophgo/linux-riscv.git
