@@ -75,9 +75,19 @@ jobs:
             subdirectory: linux
 
           - board: spacemit-k1
-            kernel_branch: bl-v1.0.y
-            kernel_git: https://gitee.com/bianbu-linux/linux-6.1
+            kernel_branch: spacemit-k1
+            kernel_git: https://github.com/YukariChiba/linux
             kernel_config: k1_defconfig
+
+          - board: pinetab-v
+            kernel_branch: Star64_devel
+            kernel_git: https://github.com/Fishwaldo/Star64_linux
+            kernel_config: pine64_pinetabv_defconfig
+
+          - board: eic7700
+            kernel_branch: linux-6.6.18-EIC7X
+            kernel_git: https://github.com/eswincomputing/linux-stable
+            kernel_config: win2030_defconfig
 
     runs-on: ubuntu-latest
     steps:
@@ -175,17 +185,17 @@ jobs:
             # add ccache and create .config
             make CROSS_COMPILE="ccache ${CROSS_COMPILE}" ARCH=${ARCH} ${{ matrix.kernel_config }}
             
-            if [[ ${{ matrix.board }} = 'visionfive2' ]]; then
+            if [[ ${{ matrix.board }} = 'visionfive2'* ]]; then
               cat ../gpu_driver_defconfig >> .tmpconfig
               echo "CONFIG_IIO_BUFFER=y" >> .tmpconfig
-            fi       
-            
+            fi
+
             # fix lpi4a drivers in common_driver_defconfig
             if [[ ${{ matrix.board }} = 'th1520' ]]; then
               sed -i '/UART/d' ../common_driver_defconfig
               sed -i '/80211/d' ../common_driver_defconfig
             fi
-            
+        
             # fix drivers
             cat ../common_driver_defconfig >> .tmpconfig
             # enable net subsystem feature
@@ -198,7 +208,9 @@ jobs:
             echo CONFIG_DEBUG_INFO_DWARF5=y >> .tmpconfig
             
             # merge to .config
-            scripts/kconfig/merge_config.sh -m .config .tmpconfig
+            if [[ ${{ matrix.board }} != 'spacemit-k1' ]]; then
+              scripts/kconfig/merge_config.sh -m .config .tmpconfig
+            fi
             
             # override .config if ../config/${board}/kernelconfig file exist
             if [ -f ../config/${board}/kernelconfig ]; then
@@ -212,6 +224,30 @@ jobs:
             # add ccache
             make CROSS_COMPILE="ccache ${CROSS_COMPILE}" ARCH=${ARCH} bindeb-pkg -j$(nproc) LOCALVERSION="-${{ matrix.board }}"
           popd
+
+      - name: Built Extra Module (if any)
+        run: |
+          mkdir -p extra-modules
+          if [[ ${{ matrix.board }} = 'visionfive2'* ]]; then
+            git clone https://github.com/starfive-tech/soft_3rdpart.git 3rdpart
+            for vdrv in wave511 wave420l; do
+              pushd 3rdpart/$vdrv/code
+              make -C ${{ github.workspace }}/kernel M=$(pwd)/vdi/linux/driver \
+                LDDINCDIR=$(pwd)/vdi/linux/driver/../include \
+                CROSS_COMPILE="${CROSS_COMPILE}" \
+                ARCH=${ARCH} modules
+              cp ./vdi/linux/driver/*.ko ${{ github.workspace }}/extra-modules
+              popd
+            done
+
+            pushd 3rdpart/codaj12/jdi/linux/driver
+              make -C ${{ github.workspace }}/kernel M=$(pwd) \
+                LDDINCDIR=$(pwd)/../include \
+                CROSS_COMPILE="${CROSS_COMPILE}" \
+                ARCH=${ARCH} modules
+              cp ./*.ko ${{ github.workspace }}/extra-modules
+            popd
+          fi
 
       - name: Check ccache
         run: |
@@ -234,6 +270,14 @@ jobs:
           path: "*.deb"
           retention-days: 3
   
+      - name: 'Upload Extra Kernel Modules Artifact'
+        uses: actions/upload-artifact@v3
+        with:
+          name: kernel-${{ matrix.board }}-extra-modules
+          if-no-files-found: "ignore"
+          path: "extra-modules"
+          retention-days: 3
+
   build-u-boot:
     strategy:
       fail-fast: false
