@@ -1,0 +1,12 @@
+KERNEL_BRANCH=cloudbook-deepin
+KERNEL_GIT=https://gitee.com/Godzilia/linux-kernel-5.10.git
+KERNEL_DEFCONFIG=zhihe_defconfig
+KERNEL_EXTRA_CONFIGS=(cgroup bpf common-drivers network pvr-egl-workaround)
+KERNEL_PATCHES=(th1520/display.patch)
+
+function override_config() {
+	sed -i '/UART/d; /80211/d' ../../kernel/defconfigs/common-drivers
+	echo 'CONFIG_IIO_BUFFER=y' >> ../../kernel/defconfigs/common-drivers
+	sed -i 's/CONFIG_DEBUG_INFO_BTF=y/CONFIG_DEBUG_INFO_BTF=n/' ../../kernel/defconfigs/bpf
+	. $1
+}
