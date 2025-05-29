@@ -31,7 +31,8 @@ sudo apt install -y \
 	u-boot-tools \
 	swig \
 	ccache \
-	debhelper
+	debhelper \
+	libdw-dev
 
 if [ "$TARGET_TYPE" == "uboot" ]; then
           sudo apt install -y qemu-utils qemu-utils f2fs-tools arm-trusted-firmware-tools libgnutls28-dev uuid-dev
