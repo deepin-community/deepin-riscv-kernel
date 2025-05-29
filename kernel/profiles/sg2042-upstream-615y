@@ -1,0 +1,11 @@
+KERNEL_BRANCH=sg2042-upstream-v6.15.y
+KERNEL_GIT=https://github.com/revyos/sg2042-vendor-kernel.git
+KERNEL_DEFCONFIG=debian_defconfig
+KERNEL_EXTRA_CONFIGS=(desktop-gpu cgroup bpf common-drivers network)
+
+# need libssl-dev for riscv64
+if [ "$(arch)" != "riscv64" ]; then
+  export DEB_BUILD_PROFILES="pkg.linux-upstream.nokernelheaders"
+else
+  export KERNEL_ENABLE_MODULES=1
+fi
