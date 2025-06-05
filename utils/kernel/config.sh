@@ -26,7 +26,7 @@ fi
 
 # version config
 sed -i '/CONFIG_LOCALVERSION_AUTO/d' .config && echo "CONFIG_LOCALVERSION_AUTO=n" >> .config
-sed -i '/CONFIG_LOCALVERSION/d' .config
+sed -i '/CONFIG_LOCALVERSION=/d' .config
 
 # debug config
 
