@@ -2,7 +2,7 @@ KERNEL_BRANCH=JH7110_VisionFive2_6.12.y_devel
 KERNEL_GIT=https://github.com/starfive-tech/linux.git
 KERNEL_DEFCONFIG=starfive_visionfive2_defconfig
 KERNEL_EXTRA_CONFIGS=(desktop-gpu cgroup bpf common-drivers network)
-KERNEL_PATCHES=(jh7110/fix-img-glitch.patch jh7110/fix-mouse-position.patch jh7110/vpu.patch jh7110/aic8800d.patch)
+KERNEL_PATCHES=(jh7110/fix-img-glitch.patch jh7110/fix-mouse-position.patch jh7110/vpu.patch)
 
 function override_patch() {
         . $1
