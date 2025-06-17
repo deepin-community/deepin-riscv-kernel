@@ -1,11 +1,19 @@
 # gcc12: unknown prefixed ISA extension `zicbom'
 GCC_VER=13
-UBOOT_BRANCH=bl-v2.0.y
-UBOOT_SBI_BRANCH=bl-v2.0.y
+UBOOT_BRANCH=k1-bl-v2.2.y
+UBOOT_SBI_BRANCH=k1-bl-v2.2.y
 UBOOT_GIT=https://github.com/YukariChiba/u-boot-k1.git
 UBOOT_SBI_GIT=https://github.com/YukariChiba/opensbi-k1.git
 UBOOT_SBI_PLATFORM_DEFCONFIG=k1_defconfig
 UBOOT_DEFCONFIGS=(k1_defconfig)
 UBOOT_SBI=1
-UBOOT_RESULT_FILENAMES=(FSBL.bin u-boot-env-default.bin u-boot.itb)
+UBOOT_RESULT_FILENAMES=(
+  FSBL.bin
+  u-boot-env-default.bin
+  u-boot.itb
+  bootinfo_emmc.bin
+  bootinfo_sd.bin
+  bootinfo_spinand.bin
+  bootinfo_spinor.bin
+)
 UBOOT_SBI_RESULT_FILENAMES=(fw_dynamic.itb)
