@@ -13,6 +13,7 @@ DEFCONFIG_LISTS=(
   milkv-megrez:eic7700-milkv-megrez:eic7700_milkv_megrez_defconfig:ddr_fw
   milkv-megrez-nx:eic7700-milkv-megrez-nx:eic7700_milkv_megrez_nx_defconfig:ddr_fw_nx
   pine64-starpro64:eic7700-pine64-starpro64:eic7700_starpro64_defconfig:ddr_fw
+  eic7700-sbc:eic7700-sbc:eic7700_sbc_defconfig:ddr_fw
 )
 UBOOT_RESULT_FILENAMES=(u-boot.bin u-boot.dtb)
 UBOOT_SBI_RESULT_FILENAMES=(fw_payload.bin)
