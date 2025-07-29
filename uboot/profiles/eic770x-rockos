@@ -1,31 +1,32 @@
-UBOOT_BRANCH=rockos-dev
+UBOOT_BRANCH=rockos-v2024.01
 UBOOT_SBI_BRANCH=rockos-dev
 UBOOT_GIT=https://github.com/rockos-riscv/rockos-u-boot.git
 UBOOT_SBI=1
 UBOOT_SBI_GIT=https://github.com/rockos-riscv/rockos-opensbi.git
-#UBOOT_SBI_PLATFORM=eswin/eic770x
-UBOOT_SBI_MAKE_ARGS="FW_PAYLOAD=y CHIPLET=BR2_CHIPLET_1 CHIPLET_DIE_AVAILABLE=BR2_CHIPLET_1_DIE0_AVAILABLE MEM_MODE=BR2_MEMMODE_FLAT PLATFORM_CLUSTER_X_CORE=BR2_CLUSTER_4_CORE"
-UBOOT_DEFCONFIGS=(
-  eic7700-evb:eic7700_evb_defconfig:eic7700-evb
-  eic7700-evb-a2:eic7700_evb_a2_defconfig:eic7700-evb-a2
-  eic7700-evb-a3:eic7700_evb_a3_defconfig:eic7700-evb-a3
-  hifive-p550:hifive_premier_p550_defconfig:eic7700-hifive-premier-p550
-  milkv-megrez:eic7700_milkv_megrez_defconfig:eic7700-milkv-megrez
-  pine64-starpro64:eic7700-pine64-starpro64:eic7700_evb_a2_defconfig
-  eic7702-evb-a1:eic7702_evb_a1_defconfig:eic7702-evb-a1
+UBOOT_SBI_PLATFORM=generic
+UBOOT_SBI_MAKE_ARGS="FW_PAYLOAD=y"
+DEFCONFIG_LISTS=(
+  eic7700-evb:eic7700-evb:eic7700_evb_defconfig:ddr_fw
+  eic7700-evb-a2:eic7700-evb-a2:eic7700_evb_a2_defconfig:ddr_fw
+  eic7700-evb-a3:eic7700-evb-a3:eic7700_evb_a3_defconfig:ddr_fw
+  hifive-p550:eic7700-hifive-premier-p550:hifive_premier_p550_defconfig:ddr_fw
+  milkv-megrez:eic7700-milkv-megrez:eic7700_milkv_megrez_defconfig:ddr_fw
+  milkv-megrez-nx:eic7700-milkv-megrez-nx:eic7700_milkv_megrez_nx_defconfig:ddr_fw_nx
+  pine64-starpro64:eic7700-pine64-starpro64:eic7700_starpro64_defconfig:ddr_fw
 )
 UBOOT_RESULT_FILENAMES=(u-boot.bin u-boot.dtb)
 UBOOT_SBI_RESULT_FILENAMES=(fw_payload.bin)
 
 function override_compile() {
 
-for UBOOT_DEFCONFIG_LIST in "${UBOOT_DEFCONFIGS[@]}"; do
+for DEFCONFIG_LIST in "${DEFCONFIG_LISTS[@]}"; do
 
-echo "compile for $UBOOT_DEFCONFIG"
+UBOOT_OUTPUT_DIR=$(echo $DEFCONFIG_LIST | cut -f1 -d ':')
+UBOOT_DTFILE=$(echo $DEFCONFIG_LIST | cut -f2 -d ':')
+UBOOT_DEFCONFIG=$(echo $DEFCONFIG_LIST | cut -f3 -d ':')
+UBOOT_SBI_FW=$(echo $DEFCONFIG_LIST | cut -f4 -d ':')
 
-UBOOT_OUTPUT_DIR=$(echo $UBOOT_DEFCONFIG_LIST | cut -f1 -d ':')
-UBOOT_DEFCONFIG=$(echo $UBOOT_DEFCONFIG_LIST | cut -f2 -d ':')
-UBOOT_DTFILE=$(echo $UBOOT_DEFCONFIG_LIST | cut -f3 -d ':')
+echo "compile for $UBOOT_OUTPUT_DIR"
 
 $MAKE_EXEC $UBOOT_DEFCONFIG
 sed -i "s#eswin/eic7700-evb-a2.dtb#eswin/$UBOOT_DTFILE.dtb#" .config
@@ -38,7 +39,6 @@ for UBOOT_RESULT_FILENAME in "${UBOOT_RESULT_FILENAMES[@]}"; do
 done
 
 pushd ../sbi
-	UBOOT_SBI_PLATFORM=${UBOOT_SBI_PLATFORM:-generic}
 	$MAKE_EXEC PLATFORM=$UBOOT_SBI_PLATFORM $UBOOT_SBI_MAKE_ARGS FW_FDT_PATH=$OUTPUT_DIR/${UBOOT_OUTPUT_DIR}/u-boot.dtb FW_PAYLOAD_PATH=$OUTPUT_DIR/${UBOOT_OUTPUT_DIR}/u-boot.bin -j$(nproc)
 	for UBOOT_SBI_RESULT_FILENAME in "${UBOOT_SBI_RESULT_FILENAMES[@]}"; do
 		find . -name "$UBOOT_SBI_RESULT_FILENAME" | xargs -I @ cp -av @ $OUTPUT_DIR/${UBOOT_OUTPUT_DIR}/
@@ -47,6 +47,7 @@ pushd ../sbi
 	cp -v $OUTPUT_DIR/${UBOOT_OUTPUT_DIR}/fw_payload.bin sign/preload/
 	pushd sign/preload
 		sed -i "s#HOLDER#$(pwd)#g" bootchain.cfg
+		sed -i "s#ddr_fw#${UBOOT_SBI_FW}#g" bootchain.cfg
 		../nsign bootchain.cfg
 		cp -v bootloader_secboot_ddr5.bin $OUTPUT_DIR/${UBOOT_OUTPUT_DIR}/
 	popd
