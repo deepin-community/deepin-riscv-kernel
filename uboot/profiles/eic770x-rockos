@@ -47,9 +47,11 @@ pushd ../sbi
 
 	cp -v $OUTPUT_DIR/${UBOOT_OUTPUT_DIR}/fw_payload.bin sign/preload/
 	pushd sign/preload
-		sed -i "s#HOLDER#$(pwd)#g" bootchain.cfg
-		sed -i "s#ddr_fw#${UBOOT_SBI_FW}#g" bootchain.cfg
-		../nsign bootchain.cfg
+		BOOTCHAIN_CFG=bootchain-${U_BOOT_OUTPUT_DIR}.cfg
+		cp bootchain.cfg $BOOTCHAIN_CFG
+		sed -i "s#HOLDER#$(pwd)#g" $BOOTCHAIN_CFG
+		sed -i "s#ddr_fw#${UBOOT_SBI_FW}#g" $BOOTCHAIN_CFG
+		../nsign $BOOTCHAIN_CFG
 		cp -v bootloader_secboot_ddr5.bin $OUTPUT_DIR/${UBOOT_OUTPUT_DIR}/
 	popd
 popd
