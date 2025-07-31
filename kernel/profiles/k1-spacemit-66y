@@ -1,5 +1,5 @@
-KERNEL_BRANCH=spacemit-k1-6.6
-KERNEL_GIT=https://github.com/YukariChiba/linux.git
+KERNEL_BRANCH=k1-bl-v2.2.y
+KERNEL_GIT=https://gitee.com/bianbu-linux/linux-6.6.git
 KERNEL_DEFCONFIG=k1_defconfig
 KERNEL_PATCHES=(k1/remove-cross-in-mkdebian-6.6.patch)
 
