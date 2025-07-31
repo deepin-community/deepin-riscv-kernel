@@ -17,3 +17,11 @@ UBOOT_RESULT_FILENAMES=(
   bootinfo_spinor.bin
 )
 UBOOT_SBI_RESULT_FILENAMES=(fw_dynamic.itb)
+
+UBOOT_PATCHES=(ufetch-2022.patch)
+
+function override_config() {
+        . $1
+
+	echo CONFIG_CMD_UFETCH=y >> configs/k1_defconfig
+}

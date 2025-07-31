@@ -17,6 +17,7 @@ DEFCONFIG_LISTS=(
 )
 UBOOT_RESULT_FILENAMES=(u-boot.bin u-boot.dtb)
 UBOOT_SBI_RESULT_FILENAMES=(fw_payload.bin)
+UBOOT_PATCHES=(ufetch.patch)
 
 function override_compile() {
 
@@ -31,6 +32,7 @@ echo "compile for $UBOOT_OUTPUT_DIR"
 
 $MAKE_EXEC $UBOOT_DEFCONFIG
 sed -i "s#eswin/eic7700-evb-a2.dtb#eswin/$UBOOT_DTFILE.dtb#" .config
+echo 'CONFIG_CMD_UFETCH=y' >> .config
 $MAKE_EXEC -j$(nproc)
 
 mkdir -p $OUTPUT_DIR/${UBOOT_OUTPUT_DIR}
