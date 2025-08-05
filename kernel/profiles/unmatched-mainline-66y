@@ -1,4 +1,0 @@
-KERNEL_BRANCH=linux-6.6.y
-KERNEL_GIT=git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
-KERNEL_DEFCONFIG=defconfig
-KERNEL_CONFIGS_FROM_DEBIAN=1
