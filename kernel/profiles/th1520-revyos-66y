@@ -2,7 +2,10 @@ KERNEL_BRANCH=th1520-lts
 KERNEL_GIT=https://github.com/revyos/th1520-linux-kernel.git
 KERNEL_DEFCONFIG=revyos_defconfig
 KERNEL_EXTRA_CONFIGS=(cgroup bpf common-drivers network pvr-egl-workaround)
-KERNEL_PATCHES=(th1520/display-revyos.patch)
+KERNEL_PATCHES=(
+	th1520/display-revyos.patch
+	"https://github.com/zhmars/cjktty-patches/raw/refs/heads/master/v6.x/cjktty-6.6.patch"
+)
 
 function override_config() {
 	sed -i '/UART/d; /80211/d' ../../kernel/defconfigs/common-drivers

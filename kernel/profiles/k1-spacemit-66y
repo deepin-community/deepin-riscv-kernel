@@ -1,7 +1,10 @@
 KERNEL_BRANCH=k1-bl-v2.2.y
 KERNEL_GIT=https://gitee.com/bianbu-linux/linux-6.6.git
 KERNEL_DEFCONFIG=k1_defconfig
-KERNEL_PATCHES=(k1/remove-cross-in-mkdebian-6.6.patch)
+KERNEL_PATCHES=(
+	k1/remove-cross-in-mkdebian-6.6.patch
+	"https://github.com/zhmars/cjktty-patches/raw/refs/heads/master/v6.x/cjktty-6.6.patch"
+)
 
 function override_config() {
         sed -i 's/CONFIG_USB_DWC3=m/CONFIG_USB_DWC3=y/' ../../kernel/defconfigs/common-drivers
