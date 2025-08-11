@@ -2,3 +2,4 @@ KERNEL_BRANCH=sg2042-upstream-v6.6.y
 KERNEL_GIT=https://github.com/revyos/sg2042-vendor-kernel.git
 KERNEL_DEFCONFIG=debian_defconfig
 KERNEL_EXTRA_CONFIGS=(desktop-gpu cgroup bpf common-drivers network)
+KERNEL_PATCHES=("https://github.com/zhmars/cjktty-patches/raw/refs/heads/master/v6.x/cjktty-6.6.patch")

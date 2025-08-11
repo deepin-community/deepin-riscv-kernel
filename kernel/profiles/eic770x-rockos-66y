@@ -3,6 +3,7 @@ NOCCACHE=1
 KERNEL_BRANCH=rockos-v6.6.y
 KERNEL_GIT=https://github.com/rockos-riscv/rockos-kernel
 KERNEL_DEFCONFIG=win2030_defconfig
+KERNEL_PATCHES=("https://github.com/zhmars/cjktty-patches/raw/refs/heads/master/v6.x/cjktty-6.6.patch")
 
 function override_config() {
         . $1
