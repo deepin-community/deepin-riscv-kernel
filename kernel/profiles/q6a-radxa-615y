@@ -1,0 +1,3 @@
+KERNEL_BRANCH=work-6.15.y
+KERNEL_GIT=https://github.com/nascs/kernel.git
+KERNEL_DEFCONFIG=qcom_module_defconfig
