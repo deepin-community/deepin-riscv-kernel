@@ -1,0 +1,104 @@
+diff --git a/drivers/gpu/drm/spacemit/spacemit_dpu.c b/drivers/gpu/drm/spacemit/spacemit_dpu.c
+index 99a832f4487e..5f3935d6a74a 100644
+--- a/drivers/gpu/drm/spacemit/spacemit_dpu.c
++++ b/drivers/gpu/drm/spacemit/spacemit_dpu.c
+@@ -611,7 +611,8 @@ static int spacemit_crtc_create_properties(struct drm_crtc *crtc)
+ }
+ 
+ static int spacemit_crtc_init(struct drm_device *drm, struct drm_crtc *crtc,
+-			 struct drm_plane *primary, struct device_node *port)
++			 struct drm_plane *primary, struct drm_plane *cursor,
++			 struct device_node *port)
+ {
+ 	int err;
+ 
+@@ -621,7 +622,7 @@ static int spacemit_crtc_init(struct drm_device *drm, struct drm_crtc *crtc,
+ 	of_node_put(port);
+ 	crtc->port = port;
+ 
+-	err = drm_crtc_init_with_planes(drm, crtc, primary, NULL,
++	err = drm_crtc_init_with_planes(drm, crtc, primary, cursor,
+ 					&spacemit_crtc_funcs, NULL);
+ 	if (err) {
+ 		DRM_ERROR("failed to init crtc.\n");
+@@ -795,7 +796,7 @@ static int spacemit_dpu_bind(struct device *dev, struct device *master, void *da
+ 	struct drm_device *drm_dev = data;
+ 	struct spacemit_dpu *dpu = dev_get_drvdata(dev);
+ 	struct device_node *np = dev->of_node;
+-	struct drm_plane *plane;
++	struct drm_plane *plane, *plane_cur;
+ 	int ret;
+ #ifdef CONFIG_SPACEMIT_DEBUG
+ 	struct dpu_clk_context *clk_ctx = NULL;
+@@ -829,13 +830,13 @@ static int spacemit_dpu_bind(struct device *dev, struct device *master, void *da
+ 	INIT_WORK(&dpu->work_update_clk, dpu_wq_update_clk);
+ 	INIT_WORK(&dpu->work_update_bw, dpu_wq_update_bw);
+ 
+-	plane = spacemit_plane_init(drm_dev, dpu);
++	plane = spacemit_plane_init(drm_dev, dpu, &plane_cur);
+ 	if (IS_ERR_OR_NULL(plane)) {
+ 		ret = PTR_ERR(plane);
+ 		goto err_destroy_workqueue;
+ 	}
+ 
+-	ret = spacemit_crtc_init(drm_dev, &dpu->crtc, plane, np);
++	ret = spacemit_crtc_init(drm_dev, &dpu->crtc, plane, plane_cur, np);
+ 	if (ret)
+ 		goto err_destroy_workqueue;
+ 
+diff --git a/drivers/gpu/drm/spacemit/spacemit_dpu.h b/drivers/gpu/drm/spacemit/spacemit_dpu.h
+index bdf864d31242..bed5ba4cb153 100644
+--- a/drivers/gpu/drm/spacemit/spacemit_dpu.h
++++ b/drivers/gpu/drm/spacemit/spacemit_dpu.h
+@@ -270,6 +270,7 @@ struct spacemit_crtc_state {
+ #define to_spacemit_crtc_state(x) container_of(x, struct spacemit_crtc_state, base)
+ 
+ struct drm_plane *spacemit_plane_init(struct drm_device *drm,
+-					struct spacemit_dpu *dpu);
++					struct spacemit_dpu *dpu,
++					struct drm_plane **cursor);
+ #endif
+ 
+diff --git a/drivers/gpu/drm/spacemit/spacemit_planes.c b/drivers/gpu/drm/spacemit/spacemit_planes.c
+index d164e60dc448..cfa72d236f59 100644
+--- a/drivers/gpu/drm/spacemit/spacemit_planes.c
++++ b/drivers/gpu/drm/spacemit/spacemit_planes.c
+@@ -739,7 +739,8 @@ static const struct drm_plane_funcs spacemit_plane_funcs = {
+ };
+ 
+ struct drm_plane *spacemit_plane_init(struct drm_device *drm,
+-					struct spacemit_dpu *dpu)
++					struct spacemit_dpu *dpu,
++					struct drm_plane **cursor)
+ {
+ 	struct drm_plane *primary = NULL;
+ 	struct spacemit_plane *p = NULL;
+@@ -764,6 +765,9 @@ struct drm_plane *spacemit_plane_init(struct drm_device *drm,
+ 		return ERR_PTR(err);
+ 	}
+ 
++	if (cursor)
++		*cursor = NULL;
++
+ 	formats = kcalloc(n_formats, sizeof(*formats), GFP_KERNEL);
+ 	if (!formats) {
+ 		err = -ENOMEM;
+@@ -792,6 +796,9 @@ struct drm_plane *spacemit_plane_init(struct drm_device *drm,
+ 			   (i == priv->num_pipes) ? DRM_PLANE_TYPE_CURSOR :
+ 			   DRM_PLANE_TYPE_OVERLAY;
+ 
++		if (i == 1 && cursor)
++			plane_type = DRM_PLANE_TYPE_CURSOR;
++
+ 		err = drm_universal_plane_init(drm, &p->plane, plane_crtc_mask,
+ 					       &spacemit_plane_funcs, formats,
+ 					       n_formats, supported_format_modifiers,
+@@ -810,6 +817,8 @@ struct drm_plane *spacemit_plane_init(struct drm_device *drm,
+ 		p->hw_pid = n_planes - i - 1;
+ 		if (i == 0)
+ 			primary = &p->plane;
++		if (i == 1 && cursor)
++			*cursor = &p->plane;
+ 
+ 		DRM_DEBUG("%s() type %d i %d hw_pid %d dev_id %d \n", __func__, dpu->type, i, p->hw_pid, dpu->dev_id);
+ 	}
