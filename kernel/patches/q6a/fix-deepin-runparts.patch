@@ -1,0 +1,13 @@
+diff --git a/scripts/package/builddeb b/scripts/package/builddeb
+index 3627ca227e5a..5558a1db59ef 100755
+--- a/scripts/package/builddeb
++++ b/scripts/package/builddeb
+@@ -76,7 +76,7 @@ install_maint_scripts () {
+ 	# kernel packages, as well as kernel packages built using make-kpkg.
+ 	# make-kpkg sets $INITRD to indicate whether an initramfs is wanted, and
+ 	# so do we; recent versions of dracut and initramfs-tools will obey this.
+-	debhookdir=${KDEB_HOOKDIR:-/etc/kernel /usr/share/kernel}
++	debhookdir=${KDEB_HOOKDIR:-/etc/kernel}
+ 	for script in postinst postrm preinst prerm; do
+ 		mkdir -p "${pdir}/DEBIAN"
+ 		cat <<-EOF > "${pdir}/DEBIAN/${script}"
