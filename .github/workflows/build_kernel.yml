@@ -17,8 +17,18 @@ on:
 run-name: build kernel for ${{ inputs.profile }}
 
 jobs:
-  build-kernel:
+  select-buildhost:
     runs-on: ubuntu-24.04
+    outputs:
+      runson: ${{ steps.output.outputs.runson }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: output
+        run: source kernel/profiles/${{ inputs.profile }} && [ "$GCC_ARCH" == "aarch64" ] && echo "runson=ubuntu-24.04-arm" >> "$GITHUB_OUTPUT" || true
+
+  build-kernel:
+    needs: select-buildhost
+    runs-on: ${{ needs.select-buildhost.outputs.runson || 'ubuntu-latest' }}
     steps:
       - name: "Update APT sources"
         run: |
