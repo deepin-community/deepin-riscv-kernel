@@ -1,0 +1,6 @@
+UBOOT_BRANCH=develop
+UBOOT_GIT=https://gitee.com/zhcomputing/u-boot.git
+UBOOT_DEFCONFIGS=(
+	a210_evb_mmode_defconfig
+)
+UBOOT_RESULT_FILENAMES=(u-boot-with-spl.bin)
