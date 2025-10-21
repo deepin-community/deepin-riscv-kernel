@@ -1,0 +1,51 @@
+GCC_ARCH=aarch64
+KERNEL_GIT=https://github.com/radxa-pkg/linux-a733.git
+KERNEL_BRANCH=main
+
+function override_prep_install_deps() {
+	. $1
+	sudo apt install -y quilt
+}
+
+function override_clone() {
+	export GIT_CLONE_PROTECTION_ACTIVE=false
+	mkdir -p work
+	git clone --recurse-submodules -b "$KERNEL_BRANCH" "$KERNEL_GIT" work/kernel
+
+	pushd work/kernel
+
+		cp .github/local/Makefile.local .
+		make -f ./Makefile.local
+
+		dh_quilt_patch
+
+		pushd src
+			ln -s bsp/modules modules
+			ln -s bsp/platform platform
+		popd
+	popd
+}
+
+function override_patch() {
+	pushd src
+		. $1
+	popd
+}
+
+function override_config() {
+	pushd src
+		$MAKE_EXEC KERNEL_SRC_DIR=$(pwd) KERNEL_DEFCONFIG=bsp.config defconfig radxa.config -j$(nproc)
+	popd
+}
+
+function override_compile() {
+	pushd src
+		$MAKE_EXEC LOCALVERSION="-${TARGET_PROFILE}" KERNEL_SRC_DIR=$(pwd) bindeb-pkg -j$(nproc)
+	popd
+}
+
+function override_cleanup() {
+	mkdir -p $OUTPUT_DIR/deb $OUTPUT_DIR/deb-dbg
+	cp work/kernel/*.deb $OUTPUT_DIR/deb
+	find $OUTPUT_DIR/deb/ -type f -name "*.deb" | grep '\-dbg_' | xargs -I @ mv @ $OUTPUT_DIR/deb-dbg/
+}
