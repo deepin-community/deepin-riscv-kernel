@@ -11,23 +11,17 @@ function override_clone() {
 	export GIT_CLONE_PROTECTION_ACTIVE=false
 	mkdir -p work
 	git clone --recurse-submodules -b "$KERNEL_BRANCH" "$KERNEL_GIT" work/kernel
-
-	pushd work/kernel
-
-		cp .github/local/Makefile.local .
-		make -f ./Makefile.local
-
-		dh_quilt_patch
-
-		pushd src
-			ln -s bsp/modules modules
-			ln -s bsp/platform platform
-		popd
-	popd
 }
 
 function override_patch() {
+	cp .github/local/Makefile.local .
+	make -f ./Makefile.local
+
+	dh_quilt_patch
+
 	pushd src
+		ln -s bsp/modules modules
+		ln -s bsp/platform platform
 		. $1
 	popd
 }
