@@ -1,0 +1,4 @@
+KERNEL_BRANCH=linux-6.1-stan-rkr5.1
+KERNEL_GIT=https://github.com/radxa/kernel.git
+KERNEL_DEFCONFIG=rockchip_linux_defconfig
+GCC_ARCH=aarch64
