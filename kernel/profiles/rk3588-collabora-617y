@@ -1,0 +1,3 @@
+KERNEL_BRANCH=rockchip-release
+KERNEL_GIT=https://gitlab.collabora.com/hardware-enablement/rockchip-3588/linux.git
+GCC_ARCH=aarch64
