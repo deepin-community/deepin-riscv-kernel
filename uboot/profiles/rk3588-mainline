@@ -1,0 +1,21 @@
+UBOOT_GIT=https://github.com/u-boot/u-boot.git
+UBOOT_DEFCONFIGS=(evb-rk3588_defconfig)
+UBOOT_RESULT_FILENAMES=(
+	idbloader.img
+	rk3588_spl_loader_*.bin
+	u-boot-rockchip.bin
+	u-boot-rockchip-spi.bin
+	u-boot.itb
+)
+GCC_ARCH=aarch64
+
+function override_compile_env() {
+	. $1
+	_rkbin=$(find $(pwd)/work/rkbin/bin/rk35/ -name "rk3588_ddr_*" | sort -r | head -n 1)
+	export ROCKCHIP_TPL=$_rkbin
+}
+
+function override_clone() {
+	. $1
+	git clone --depth 1 https://github.com/rockchip-linux/rkbin work/rkbin
+}

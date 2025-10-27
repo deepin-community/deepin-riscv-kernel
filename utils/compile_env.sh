@@ -14,7 +14,8 @@ case $GCC_ARCH in
 		MAKE_ARCH="riscv"
 		;;
 	aarch64)
-		MAKE_ARCH="arm64"
+		[ "$TARGET_TYPE" != "kernel" ] || MAKE_ARCH="arm64"
+		[ "$TARGET_TYPE" != "uboot" ] || MAKE_ARCH="arm"
 		;;
 	*)
 		MAKE_ARCH="${GCC_ARCH}"
