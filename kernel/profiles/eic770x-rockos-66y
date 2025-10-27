@@ -4,6 +4,7 @@ KERNEL_BRANCH=rockos-v6.6.y
 KERNEL_GIT=https://github.com/rockos-riscv/rockos-kernel
 KERNEL_DEFCONFIG=win2030_defconfig
 KERNEL_PATCHES=("https://github.com/zhmars/cjktty-patches/raw/refs/heads/master/v6.x/cjktty-6.6.patch")
+PKG_DEPS=(asciidoc)
 
 function override_config() {
         . $1
@@ -14,10 +15,4 @@ function override_config() {
 	echo CONFIG_DRM_IMG=y >> .config
 
 	$MAKE_EXEC olddefconfig
-}
-
-function override_prep_install_deps() {
-        . $1
-
-	sudo apt install -y asciidoc
 }

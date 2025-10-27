@@ -1,11 +1,7 @@
 GCC_ARCH=aarch64
 KERNEL_GIT=https://github.com/radxa-pkg/linux-a733.git
 KERNEL_BRANCH=main
-
-function override_prep_install_deps() {
-	. $1
-	sudo apt install -y quilt
-}
+PKG_DEPS=(quilt)
 
 function override_clone() {
 	export GIT_CLONE_PROTECTION_ACTIVE=false

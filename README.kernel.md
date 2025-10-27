@@ -1,5 +1,9 @@
 # Kernel Config
 
+## Dependency
+
+- `PKG_DEPS`: extra packages to install
+
 ## Toolchain
 
 - `GCC_VER`: gcc version to use

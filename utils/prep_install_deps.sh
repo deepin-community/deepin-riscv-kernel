@@ -35,5 +35,9 @@ sudo apt install -y \
 	libdw-dev
 
 if [ "$TARGET_TYPE" == "uboot" ]; then
-          sudo apt install -y qemu-utils qemu-utils f2fs-tools arm-trusted-firmware-tools libgnutls28-dev uuid-dev
+        sudo apt install -y qemu-utils qemu-utils f2fs-tools arm-trusted-firmware-tools libgnutls28-dev uuid-dev
+fi
+
+if [ ! -z $PKG_DEPS ]; then
+	sudo apt install -y ${PKG_DEPS[@]}
 fi

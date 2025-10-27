@@ -6,13 +6,9 @@ KERNEL_PATCHES=(
         k1/fix-cursor.patch
 	"https://github.com/zhmars/cjktty-patches/raw/refs/heads/master/v6.x/cjktty-6.6.patch"
 )
+PKG_DEPS=(asciidoc)
 
 function override_config() {
         sed -i 's/CONFIG_USB_DWC3=m/CONFIG_USB_DWC3=y/' ../../kernel/defconfigs/common-drivers
         . $1
-}
-
-function override_prep_install_deps() {
-        . $1
-        sudo apt install -y asciidoc
 }

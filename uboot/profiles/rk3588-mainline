@@ -8,11 +8,7 @@ UBOOT_RESULT_FILENAMES=(
 	u-boot.itb
 )
 GCC_ARCH=aarch64
-
-function override_prep_install_deps() {
-	. $1
-	sudo apt-get install -y python-pyelftools
-}
+PKG_DEPS=(python3-pyelftools)
 
 function override_clone() {
 	. $1

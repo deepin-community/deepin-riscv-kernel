@@ -3,6 +3,7 @@ NOCCACHE=1
 KERNEL_BRANCH=dev/rockos-v6.12.y
 KERNEL_GIT=https://github.com/rockos-riscv/rockos-kernel
 KERNEL_DEFCONFIG=hifive-premier-p550_defconfig
+PKG_DEPS=(asciidoc)
 
 function override_config() {
         . $1
@@ -13,10 +14,4 @@ function override_config() {
 	echo CONFIG_DRM_IMG=y >> .config
 
 	$MAKE_EXEC olddefconfig
-}
-
-function override_prep_install_deps() {
-        . $1
-
-	sudo apt install -y asciidoc
 }
