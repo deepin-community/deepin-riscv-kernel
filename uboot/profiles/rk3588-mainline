@@ -9,13 +9,16 @@ UBOOT_RESULT_FILENAMES=(
 )
 GCC_ARCH=aarch64
 
-function override_compile_env() {
+function override_prep_install_deps() {
 	. $1
-	_rkbin=$(find $(pwd)/work/rkbin/bin/rk35/ -name "rk3588_ddr_*" | sort -r | head -n 1)
-	export ROCKCHIP_TPL=$_rkbin
+	sudo apt-get install -y python-pyelftools
 }
 
 function override_clone() {
 	. $1
 	git clone --depth 1 https://github.com/rockchip-linux/rkbin work/rkbin
+	export ROCKCHIP_TPL=$(find $(pwd)/work/rkbin/bin/rk35/ -name "rk3588_ddr_*" | sort -r | head -n 1)
+	export BL31=$(find $(pwd)/work/rkbin/bin/rk35/ -name "rk3588_bl31_*" | sort -r | head -n 1)
 }
+
+
