@@ -13,8 +13,16 @@ PKG_DEPS=(python3-pyelftools)
 function override_clone() {
 	. $1
 	git clone --depth 1 https://github.com/rockchip-linux/rkbin work/rkbin
+	git clone --depth 1 https://github.com/TrustedFirmware-A/trusted-firmware-a work/tfa
 	export ROCKCHIP_TPL=$(find $(pwd)/work/rkbin/bin/rk35/ -name "rk3588_ddr_*" | sort -r | head -n 1)
-	export BL31=$(find $(pwd)/work/rkbin/bin/rk35/ -name "rk3588_bl31_*" | sort -r | head -n 1)
 }
 
+function override_compile() {
+	pushd ../tfa
+		make realclean
+		make PLAT=rk3588
+		export BL31=$(pwd)/build/rk3588/release/bl31/bl31.elf
+	popd
 
+	. $1
+}
