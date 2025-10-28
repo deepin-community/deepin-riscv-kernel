@@ -1,5 +1,5 @@
-KERNEL_BRANCH=dragon-q6a-v6.17-testing
-KERNEL_GIT=https://github.com/strongtz/linux-next.git
+KERNEL_BRANCH=linux-6.17.1
+KERNEL_GIT=https://github.com/radxa/kernel.git
 KERNEL_DEFCONFIG=qcom_module_defconfig
 KERNEL_PATCHES=(q6a/fix-deepin-runparts.patch)
 GCC_ARCH=aarch64
