@@ -1,0 +1,611 @@
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588-armsom-aim7.dtsi b/arch/arm64/boot/dts/rockchip/rk3588-armsom-aim7.dtsi
+index 6e16ff7e4..e2b3e6a02 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588-armsom-aim7.dtsi
++++ b/arch/arm64/boot/dts/rockchip/rk3588-armsom-aim7.dtsi
+@@ -42,7 +42,7 @@ &cpu_b2 {
+ 	mem-supply = <&vdd_cpu_big1_mem_s0>;
+ };
+ 
+-&gpu {
++&gpu_panthor {
+ 	mali-supply = <&vdd_gpu_s0>;
+ 	mem-supply = <&vdd_gpu_mem_s0>;
+ 	status = "okay";
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588-armsom-sige7.dts b/arch/arm64/boot/dts/rockchip/rk3588-armsom-sige7.dts
+index 9bf09313b..1cdb60461 100755
+--- a/arch/arm64/boot/dts/rockchip/rk3588-armsom-sige7.dts
++++ b/arch/arm64/boot/dts/rockchip/rk3588-armsom-sige7.dts
+@@ -262,7 +262,7 @@ &dp0_in_vp2 {
+ 	status = "okay";
+ };
+ 
+-&gpu {
++&gpu_panthor {
+ 	mali-supply = <&vdd_gpu_s0>;
+ 	mem-supply = <&vdd_gpu_mem_s0>;
+ 	status = "okay";
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588-armsom-w3.dts b/arch/arm64/boot/dts/rockchip/rk3588-armsom-w3.dts
+index fe2044785..3375ccf84 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588-armsom-w3.dts
++++ b/arch/arm64/boot/dts/rockchip/rk3588-armsom-w3.dts
+@@ -331,7 +331,7 @@ &cpu_b2 {
+ 	mem-supply = <&vdd_cpu_big1_mem_s0>;
+ };
+ 
+-&gpu {
++&gpu_panthor {
+ 	mali-supply = <&vdd_gpu_s0>;
+ 	mem-supply = <&vdd_gpu_mem_s0>;
+ 	status = "okay";
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588-blade3-v101-linux.dts b/arch/arm64/boot/dts/rockchip/rk3588-blade3-v101-linux.dts
+index d02826cea..edeee577b 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588-blade3-v101-linux.dts
++++ b/arch/arm64/boot/dts/rockchip/rk3588-blade3-v101-linux.dts
+@@ -265,7 +265,7 @@ &cpu_b2 {
+ 	mem-supply = <&vdd_cpu_big1_mem_s0>;
+ };
+ 
+-&gpu {
++&gpu_panthor {
+ 	mali-supply = <&vdd_gpu_s0>;
+ 	mem-supply = <&vdd_gpu_mem_s0>;
+ 	status = "okay";
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588-blueberry.dtsi b/arch/arm64/boot/dts/rockchip/rk3588-blueberry.dtsi
+index 75e9947e5..8a424294d 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588-blueberry.dtsi
++++ b/arch/arm64/boot/dts/rockchip/rk3588-blueberry.dtsi
+@@ -146,7 +146,7 @@ &gpu_opp_table {
+ 
+ };
+ 
+-&gpu {
++&gpu_panthor {
+ 	mali-supply = <&vdd_gpu_s0>;
+ 	mem-supply = <&vdd_gpu_mem_s0>;
+ 	status = "okay";
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588-cyber-aib.dts b/arch/arm64/boot/dts/rockchip/rk3588-cyber-aib.dts
+index 424f119b1..4fb22dba1 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588-cyber-aib.dts
++++ b/arch/arm64/boot/dts/rockchip/rk3588-cyber-aib.dts
+@@ -277,7 +277,7 @@ &cpu_b2 {
+ 	mem-supply = <&vdd_cpu_big1_mem_s0>;
+ };
+ 
+-&gpu {
++&gpu_panthor {
+ 	mali-supply = <&vdd_gpu_s0>;
+ 	mem-supply = <&vdd_gpu_mem_s0>;
+ 	status = "okay";
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588-evb.dtsi b/arch/arm64/boot/dts/rockchip/rk3588-evb.dtsi
+index b36dd1f3c..37b558c00 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588-evb.dtsi
++++ b/arch/arm64/boot/dts/rockchip/rk3588-evb.dtsi
+@@ -948,7 +948,7 @@ dsi1_out_panel: endpoint {
+ 
+ };
+ 
+-&gpu {
++&gpu_panthor {
+ 	mali-supply = <&vdd_gpu_s0>;
+ 	mem-supply = <&vdd_gpu_mem_s0>;
+ 	status = "okay";
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588-firefly-itx-3588j.dts b/arch/arm64/boot/dts/rockchip/rk3588-firefly-itx-3588j.dts
+index 6449e6d8a..b0f6ea801 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588-firefly-itx-3588j.dts
++++ b/arch/arm64/boot/dts/rockchip/rk3588-firefly-itx-3588j.dts
+@@ -571,7 +571,7 @@ &gmac1_rgmii_bus{
+ 	<3 RK_PA1 1 &pcfg_pull_up_drv_level_6>;
+ };
+ 
+-&gpu {
++&gpu_panthor {
+ 	mali-supply = <&vdd_gpu_s0>;
+ 	mem-supply = <&vdd_gpu_mem_s0>;
+ 	status = "okay";
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588-fxblox-rk1.dts b/arch/arm64/boot/dts/rockchip/rk3588-fxblox-rk1.dts
+index 08fe65cd6..3a9a488c3 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588-fxblox-rk1.dts
++++ b/arch/arm64/boot/dts/rockchip/rk3588-fxblox-rk1.dts
+@@ -288,7 +288,7 @@ &cpu_b2 {
+ 	mem-supply = <&vdd_cpu_big1_mem_s0>;
+ };
+ 
+-&gpu {
++&gpu_panthor {
+ 	mali-supply = <&vdd_gpu_s0>;
+ 	mem-supply = <&vdd_gpu_mem_s0>;
+ 	status = "okay";
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588-hinlink-h88k.dts b/arch/arm64/boot/dts/rockchip/rk3588-hinlink-h88k.dts
+index c3437a0f3..a9c87c64a 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588-hinlink-h88k.dts
++++ b/arch/arm64/boot/dts/rockchip/rk3588-hinlink-h88k.dts
+@@ -397,7 +397,7 @@ &dp1_in_vp2 {
+ 	status = "okay";
+ };
+ 
+-&gpu {
++&gpu_panthor {
+ 	mali-supply = <&vdd_gpu_s0>;
+ 	mem-supply = <&vdd_gpu_mem_s0>;
+ 	status = "okay";
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588-mixtile-core3588e.dts b/arch/arm64/boot/dts/rockchip/rk3588-mixtile-core3588e.dts
+index ea6dc637d..c5bd36e40 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588-mixtile-core3588e.dts
++++ b/arch/arm64/boot/dts/rockchip/rk3588-mixtile-core3588e.dts
+@@ -258,7 +258,7 @@ &cpu_b2 {
+ 	mem-supply = <&vdd_cpu_big1_mem_s0>;
+ };
+ 
+-&gpu {
++&gpu_panthor {
+ 	mali-supply = <&vdd_gpu_s0>;
+ 	mem-supply = <&vdd_gpu_mem_s0>;
+ 	status = "okay";
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588-nvr.dtsi b/arch/arm64/boot/dts/rockchip/rk3588-nvr.dtsi
+index b4eef542c..a1766d762 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588-nvr.dtsi
++++ b/arch/arm64/boot/dts/rockchip/rk3588-nvr.dtsi
+@@ -143,7 +143,7 @@ &gpu_opp_table {
+ 
+ };
+ 
+-&gpu {
++&gpu_panthor {
+ 	mali-supply = <&vdd_gpu_s0>;
+ 	mem-supply = <&vdd_gpu_mem_s0>;
+ 	status = "okay";
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588-orangepi-5-max.dts b/arch/arm64/boot/dts/rockchip/rk3588-orangepi-5-max.dts
+index 7531a2c74..acbe11de4 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588-orangepi-5-max.dts
++++ b/arch/arm64/boot/dts/rockchip/rk3588-orangepi-5-max.dts
+@@ -513,7 +513,7 @@ dsi1_out_panel: endpoint {
+ 	};
+ };
+ 
+-&gpu {
++&gpu_panthor {
+ 	mali-supply = <&vdd_gpu_s0>;
+ 	mem-supply = <&vdd_gpu_mem_s0>;
+ 	status = "okay";
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588-orangepi-5-plus.dts b/arch/arm64/boot/dts/rockchip/rk3588-orangepi-5-plus.dts
+index 83ed754c9..00feaa7c6 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588-orangepi-5-plus.dts
++++ b/arch/arm64/boot/dts/rockchip/rk3588-orangepi-5-plus.dts
+@@ -442,7 +442,7 @@ &dp0_in_vp2 {
+     status = "okay";
+ };
+ 
+-&gpu {
++&gpu_panthor {
+     mali-supply = <&vdd_gpu_s0>;
+     mem-supply = <&vdd_gpu_mem_s0>;
+     status = "okay";
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588-orangepi-5-ultra.dts b/arch/arm64/boot/dts/rockchip/rk3588-orangepi-5-ultra.dts
+index 9e88c6d40..d3f571a6f 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588-orangepi-5-ultra.dts
++++ b/arch/arm64/boot/dts/rockchip/rk3588-orangepi-5-ultra.dts
+@@ -542,7 +542,7 @@ dsi1_out_panel: endpoint {
+ 	};
+ };
+ 
+-&gpu {
++&gpu_panthor {
+ 	mali-supply = <&vdd_gpu_s0>;
+ 	mem-supply = <&vdd_gpu_mem_s0>;
+ 	status = "okay";
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588-pc.dtsi b/arch/arm64/boot/dts/rockchip/rk3588-pc.dtsi
+index b88cd00d4..d68afbbeb 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588-pc.dtsi
++++ b/arch/arm64/boot/dts/rockchip/rk3588-pc.dtsi
+@@ -102,7 +102,7 @@ &dmc {
+ 	status = "okay";
+ };
+ 
+-&gpu {
++&gpu_panthor {
+ 	mali-supply = <&vdd_gpu_s0>;
+ 	mem-supply = <&vdd_gpu_mem_s0>;
+ 	status = "okay";
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588-pcie-ep-demo.dtsi b/arch/arm64/boot/dts/rockchip/rk3588-pcie-ep-demo.dtsi
+index f8a2ff340..1873ba72a 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588-pcie-ep-demo.dtsi
++++ b/arch/arm64/boot/dts/rockchip/rk3588-pcie-ep-demo.dtsi
+@@ -176,7 +176,7 @@ &dp0_in_vp2 {
+ 	status = "okay";
+ };
+ 
+-&gpu {
++&gpu_panthor {
+ 	mali-supply = <&vdd_gpu_s0>;
+ 	mem-supply = <&vdd_gpu_mem_s0>;
+ 	status = "okay";
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588-radxa-rock-5b+.dts b/arch/arm64/boot/dts/rockchip/rk3588-radxa-rock-5b+.dts
+index 81e24a6f8..edcf1e404 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588-radxa-rock-5b+.dts
++++ b/arch/arm64/boot/dts/rockchip/rk3588-radxa-rock-5b+.dts
+@@ -269,7 +269,7 @@ &cpu_b2 {
+ 	mem-supply = <&vdd_cpu_big1_mem_s0>;
+ };
+ 
+-&gpu {
++&gpu_panthor {
+ 	mali-supply = <&vdd_gpu_s0>;
+ 	mem-supply = <&vdd_gpu_mem_s0>;
+ 	status = "okay";
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588-rock-5-itx.dts b/arch/arm64/boot/dts/rockchip/rk3588-rock-5-itx.dts
+index 97a1ee1a7..75881faf5 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588-rock-5-itx.dts
++++ b/arch/arm64/boot/dts/rockchip/rk3588-rock-5-itx.dts
+@@ -327,7 +327,7 @@ &cpu_b2 {
+ 	mem-supply = <&vdd_cpu_big1_mem_s0>;
+ };
+ 
+-&gpu {
++&gpu_panthor {
+ 	mali-supply = <&vdd_gpu_s0>;
+ 	mem-supply = <&vdd_gpu_mem_s0>;
+ 	status = "okay";
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588-rock-5b.dts b/arch/arm64/boot/dts/rockchip/rk3588-rock-5b.dts
+index 6dcfc6d46..6e53029d8 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588-rock-5b.dts
++++ b/arch/arm64/boot/dts/rockchip/rk3588-rock-5b.dts
+@@ -258,7 +258,7 @@ &cpu_b2 {
+ 	mem-supply = <&vdd_cpu_big1_mem_s0>;
+ };
+ 
+-&gpu {
++&gpu_panthor {
+ 	mali-supply = <&vdd_gpu_s0>;
+ 	mem-supply = <&vdd_gpu_mem_s0>;
+ 	status = "okay";
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588-rock-5t.dts b/arch/arm64/boot/dts/rockchip/rk3588-rock-5t.dts
+index 2b2b9c21c..01edf0793 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588-rock-5t.dts
++++ b/arch/arm64/boot/dts/rockchip/rk3588-rock-5t.dts
+@@ -280,7 +280,7 @@ &cpu_b2 {
+ 	mem-supply = <&vdd_cpu_big1_mem_s0>;
+ };
+ 
+-&gpu {
++&gpu_panthor {
+ 	mali-supply = <&vdd_gpu_s0>;
+ 	mem-supply = <&vdd_gpu_mem_s0>;
+ 	status = "okay";
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588-smart-am60.dts b/arch/arm64/boot/dts/rockchip/rk3588-smart-am60.dts
+index 53b09d2a3..fe6708119 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588-smart-am60.dts
++++ b/arch/arm64/boot/dts/rockchip/rk3588-smart-am60.dts
+@@ -284,7 +284,7 @@ &cpu_b2 {
+ 	mem-supply = <&vdd_cpu_big1_mem_s0>;
+ };
+ 
+-&gpu {
++&gpu_panthor {
+ 	mali-supply = <&vdd_gpu_s0>;
+ 	mem-supply = <&vdd_gpu_mem_s0>;
+ 	upthreshold = <60>;
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588-som3588-cat.dts b/arch/arm64/boot/dts/rockchip/rk3588-som3588-cat.dts
+index d2256c50b..2c06dccf9 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588-som3588-cat.dts
++++ b/arch/arm64/boot/dts/rockchip/rk3588-som3588-cat.dts
+@@ -350,7 +350,7 @@ &cpu_b2 {
+ 	mem-supply = <&vdd_cpu_big1_mem_s0>;
+ };
+ 
+-&gpu {
++&gpu_panthor {
+ 	mali-supply = <&vdd_gpu_s0>;
+ 	mem-supply = <&vdd_gpu_mem_s0>;
+ 	upthreshold = <60>;
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588-toybrick.dtsi b/arch/arm64/boot/dts/rockchip/rk3588-toybrick.dtsi
+index 9eacf3606..95850af74 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588-toybrick.dtsi
++++ b/arch/arm64/boot/dts/rockchip/rk3588-toybrick.dtsi
+@@ -930,7 +930,7 @@ dsi1_out_panel: endpoint {
+ 
+ };
+ 
+-&gpu {
++&gpu_panthor {
+ 	mali-supply = <&vdd_gpu_s0>;
+ 	mem-supply = <&vdd_gpu_mem_s0>;
+ 	status = "okay";
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588-turing-rk1.dtsi b/arch/arm64/boot/dts/rockchip/rk3588-turing-rk1.dtsi
+index f7711b735..82f07c373 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588-turing-rk1.dtsi
++++ b/arch/arm64/boot/dts/rockchip/rk3588-turing-rk1.dtsi
+@@ -228,7 +228,7 @@ &cpu_b2 {
+ 	mem-supply = <&vdd_cpu_big1_mem_s0>;
+ };
+ 
+-&gpu {
++&gpu_panthor {
+ 	mali-supply = <&vdd_gpu_s0>;
+ 	mem-supply = <&vdd_gpu_mem_s0>;
+ 	status = "okay";
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588-vehicle-s66.dtsi b/arch/arm64/boot/dts/rockchip/rk3588-vehicle-s66.dtsi
+index 3c7550479..53ace5ef9 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588-vehicle-s66.dtsi
++++ b/arch/arm64/boot/dts/rockchip/rk3588-vehicle-s66.dtsi
+@@ -113,7 +113,7 @@ &cpu_b2 {
+ 	mem-supply = <&vdd_cpu_big1_s0>;
+ };
+ 
+-&gpu {
++&gpu_panthor {
+ 	mali-supply = <&vdd_gpu_s0>;
+ 	mem-supply = <&vdd_gpu_s0>;
+ 	status = "okay";
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588-vehicle-v20.dtsi b/arch/arm64/boot/dts/rockchip/rk3588-vehicle-v20.dtsi
+index 141e0f054..03abdd356 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588-vehicle-v20.dtsi
++++ b/arch/arm64/boot/dts/rockchip/rk3588-vehicle-v20.dtsi
+@@ -145,7 +145,7 @@ &cpu_b2 {
+ 	mem-supply = <&vdd_cpu_big1_mem_s0>;
+ };
+ 
+-&gpu {
++&gpu_panthor {
+ 	mali-supply = <&vdd_gpu_s0>;
+ 	mem-supply = <&vdd_gpu_mem_s0>;
+ 	status = "okay";
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588-vehicle.dtsi b/arch/arm64/boot/dts/rockchip/rk3588-vehicle.dtsi
+index 51d1ab0a0..246ebf342 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588-vehicle.dtsi
++++ b/arch/arm64/boot/dts/rockchip/rk3588-vehicle.dtsi
+@@ -218,7 +218,7 @@ &cpu_b2 {
+ 	mem-supply = <&vdd_cpu_big1_mem_s0>;
+ };
+ 
+-&gpu {
++&gpu_panthor {
+ 	mali-supply = <&vdd_gpu_s0>;
+ 	mem-supply = <&vdd_gpu_mem_s0>;
+ 	status = "okay";
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588-yx-imb3588.dts b/arch/arm64/boot/dts/rockchip/rk3588-yx-imb3588.dts
+index 09f9cd651..8fd8f08c4 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588-yx-imb3588.dts
++++ b/arch/arm64/boot/dts/rockchip/rk3588-yx-imb3588.dts
+@@ -663,7 +663,7 @@ &gmac1_rgmii_clk
+ 	status = "okay";
+ };
+ 
+-&gpu {
++&gpu_panthor {
+ 	mali-supply = <&vdd_gpu_s0>;
+ 	mem-supply = <&vdd_gpu_mem_s0>;
+ 	status = "okay";
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588s-9tripod-linux.dts b/arch/arm64/boot/dts/rockchip/rk3588s-9tripod-linux.dts
+index 2b31a2f34..8cea43a8e 100755
+--- a/arch/arm64/boot/dts/rockchip/rk3588s-9tripod-linux.dts
++++ b/arch/arm64/boot/dts/rockchip/rk3588s-9tripod-linux.dts
+@@ -470,7 +470,7 @@ &dsi0_panel {
+ 	pinctrl-0 = <&lcd_rst_gpio>;
+ };
+ 
+-&gpu {
++&gpu_panthor {
+ 	mali-supply = <&vdd_gpu_s0>;
+ 	mem-supply = <&vdd_gpu_mem_s0>;
+ 	status = "okay";
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588s-evb.dtsi b/arch/arm64/boot/dts/rockchip/rk3588s-evb.dtsi
+index b18666a1b..d29392f10 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588s-evb.dtsi
++++ b/arch/arm64/boot/dts/rockchip/rk3588s-evb.dtsi
+@@ -862,7 +862,7 @@ dsi1_out_panel: endpoint {
+ 
+ };
+ 
+-&gpu {
++&gpu_panthor {
+ 	mali-supply = <&vdd_gpu_s0>;
+ 	mem-supply = <&vdd_gpu_mem_s0>;
+ 	status = "okay";
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588s-khadas-edge2.dts b/arch/arm64/boot/dts/rockchip/rk3588s-khadas-edge2.dts
+index 5a6cbd339..f130766be 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588s-khadas-edge2.dts
++++ b/arch/arm64/boot/dts/rockchip/rk3588s-khadas-edge2.dts
+@@ -335,7 +335,7 @@ &cpu_b2 {
+ 	mem-supply = <&vdd_cpu_big1_mem_s0>;
+ };
+ 
+-&gpu {
++&gpu_panthor {
+ 	mali-supply = <&vdd_gpu_s0>;
+ 	mem-supply = <&vdd_gpu_mem_s0>;
+ 	status = "okay";
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588s-lubancat-4.dts b/arch/arm64/boot/dts/rockchip/rk3588s-lubancat-4.dts
+index 1f4e17d3a..235da5392 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588s-lubancat-4.dts
++++ b/arch/arm64/boot/dts/rockchip/rk3588s-lubancat-4.dts
+@@ -420,7 +420,7 @@ &cpu_b2 {
+ 	mem-supply = <&vdd_cpu_big1_mem_s0>;
+ };
+ 
+-&gpu {
++&gpu_panthor {
+ 	mali-supply = <&vdd_gpu_s0>;
+ 	mem-supply = <&vdd_gpu_mem_s0>;
+ 	upthreshold = <60>;
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588s-nanopi-r6-common.dtsi b/arch/arm64/boot/dts/rockchip/rk3588s-nanopi-r6-common.dtsi
+index 4703316c0..741486696 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588s-nanopi-r6-common.dtsi
++++ b/arch/arm64/boot/dts/rockchip/rk3588s-nanopi-r6-common.dtsi
+@@ -156,7 +156,7 @@ &cpu_b2 {
+ 	mem-supply = <&vdd_cpu_big1_mem_s0>;
+ };
+ 
+-&gpu {
++&gpu_panthor {
+ 	mali-supply = <&vdd_gpu_s0>;
+ 	mem-supply = <&vdd_gpu_mem_s0>;
+ 	upthreshold = <60>;
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588s-orangepi-5-pro.dts b/arch/arm64/boot/dts/rockchip/rk3588s-orangepi-5-pro.dts
+index 8f4afdb5f..f31d14cb6 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588s-orangepi-5-pro.dts
++++ b/arch/arm64/boot/dts/rockchip/rk3588s-orangepi-5-pro.dts
+@@ -298,7 +298,7 @@ &avsd {
+ 	status = "okay";
+ };
+ 
+-&gpu {
++&gpu_panthor {
+ 	mali-supply = <&vdd_gpu_s0>;
+ 	mem-supply = <&vdd_gpu_mem_s0>;
+ 	status = "okay";
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588s-orangepi-5.dts b/arch/arm64/boot/dts/rockchip/rk3588s-orangepi-5.dts
+index 1838e6580..51be7019b 100755
+--- a/arch/arm64/boot/dts/rockchip/rk3588s-orangepi-5.dts
++++ b/arch/arm64/boot/dts/rockchip/rk3588s-orangepi-5.dts
+@@ -342,7 +342,7 @@ &dp0_in_vp2 {
+ 	status = "okay";
+ };
+ 
+-&gpu {
++&gpu_panthor {
+ 	mali-supply = <&vdd_gpu_s0>;
+ 	mem-supply = <&vdd_gpu_mem_s0>;
+ 	status = "okay";
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588s-radxa-cm5.dtsi b/arch/arm64/boot/dts/rockchip/rk3588s-radxa-cm5.dtsi
+index bb25ca657..7bc440319 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588s-radxa-cm5.dtsi
++++ b/arch/arm64/boot/dts/rockchip/rk3588s-radxa-cm5.dtsi
+@@ -149,7 +149,7 @@ &cpu_b3 {
+ 	#cooling-cells = <2>;
+ };
+ 
+-&gpu {
++&gpu_panthor {
+ 	mali-supply = <&vdd_gpu_s0>;
+ 	mem-supply = <&vdd_gpu_mem_s0>;
+ 	status = "okay";
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588s-radxa-e52c.dts b/arch/arm64/boot/dts/rockchip/rk3588s-radxa-e52c.dts
+index 2a91c5757..328e5d82d 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588s-radxa-e52c.dts
++++ b/arch/arm64/boot/dts/rockchip/rk3588s-radxa-e52c.dts
+@@ -201,7 +201,7 @@ &cpu_b3 {
+ 
+ /* GPU */
+ 
+-&gpu {
++&gpu_panthor {
+ 	mali-supply = <&vdd_gpu_s0>;
+ 	mem-supply = <&vdd_gpu_mem_s0>;
+ 	status = "okay";
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588s-radxa-nx5-module.dtsi b/arch/arm64/boot/dts/rockchip/rk3588s-radxa-nx5-module.dtsi
+index 08e84e305..cde254a9d 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588s-radxa-nx5-module.dtsi
++++ b/arch/arm64/boot/dts/rockchip/rk3588s-radxa-nx5-module.dtsi
+@@ -160,7 +160,7 @@ &cpu_b2 {
+ 	mem-supply = <&vdd_cpu_big1_mem_s0>;
+ };
+ 
+-&gpu {
++&gpu_panthor {
+ 	mali-supply = <&vdd_gpu_s0>;
+ 	mem-supply = <&vdd_gpu_mem_s0>;
+ 	status = "okay";
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588s-roc-pc.dts b/arch/arm64/boot/dts/rockchip/rk3588s-roc-pc.dts
+index 586d131ca..ddb66cc59 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588s-roc-pc.dts
++++ b/arch/arm64/boot/dts/rockchip/rk3588s-roc-pc.dts
+@@ -363,7 +363,7 @@ &gmac1_rgmii_clk
+ 	phy-handle = <&rgmii_phy1>;
+ };
+ 
+-&gpu {
++&gpu_panthor {
+ 	status = "okay";
+ 	mali-supply = <&vdd_gpu_s0>;
+ 	mem-supply = <&vdd_gpu_mem_s0>;
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588s-rock-5a.dts b/arch/arm64/boot/dts/rockchip/rk3588s-rock-5a.dts
+index bf573e763..6ceba70aa 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588s-rock-5a.dts
++++ b/arch/arm64/boot/dts/rockchip/rk3588s-rock-5a.dts
+@@ -263,7 +263,7 @@ &cpu_b2 {
+ 
+ /* GPU */
+ 
+-&gpu {
++&gpu_panthor {
+ 	mali-supply = <&vdd_gpu_s0>;
+ 	mem-supply = <&vdd_gpu_mem_s0>;
+ 	status = "okay";
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588s-rock-5c.dts b/arch/arm64/boot/dts/rockchip/rk3588s-rock-5c.dts
+index e1b4911be..ed9386538 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588s-rock-5c.dts
++++ b/arch/arm64/boot/dts/rockchip/rk3588s-rock-5c.dts
+@@ -264,7 +264,7 @@ &cpu_b3 {
+ 
+ /* GPU */
+ 
+-&gpu {
++&gpu_panthor {
+ 	mali-supply = <&vdd_gpu_s0>;
+ 	mem-supply = <&vdd_gpu_mem_s0>;
+ 	status = "okay";
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588s-tablet-rk806-single.dtsi b/arch/arm64/boot/dts/rockchip/rk3588s-tablet-rk806-single.dtsi
+index a4de74df7..76e1c88d7 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588s-tablet-rk806-single.dtsi
++++ b/arch/arm64/boot/dts/rockchip/rk3588s-tablet-rk806-single.dtsi
+@@ -1086,7 +1086,7 @@ dsi1_timing0: timing0 {
+ 	};
+ };
+ 
+-&gpu {
++&gpu_panthor {
+ 	mali-supply = <&vdd_gpu_s0>;
+ 	mem-supply = <&vdd_gpu_mem_s0>;
+ 	upthreshold = <60>;
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588s-tablet-single.dtsi b/arch/arm64/boot/dts/rockchip/rk3588s-tablet-single.dtsi
+index 822bb7b88..cbdf196cf 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588s-tablet-single.dtsi
++++ b/arch/arm64/boot/dts/rockchip/rk3588s-tablet-single.dtsi
+@@ -434,7 +434,7 @@ &edp0_in_vp2 {
+ 	status = "okay";
+ };
+ 
+-&gpu {
++&gpu_panthor {
+ 	mali-supply = <&vdd_gpu_s0>;
+ 	mem-supply = <&vdd_gpu_mem_s0>;
+ 	upthreshold = <60>;
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588s-tablet.dtsi b/arch/arm64/boot/dts/rockchip/rk3588s-tablet.dtsi
+index 622b2dc6e..86a8c51d5 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588s-tablet.dtsi
++++ b/arch/arm64/boot/dts/rockchip/rk3588s-tablet.dtsi
+@@ -379,7 +379,7 @@ &fiq_debugger {
+ 	pinctrl-0 = <&uart2m1_xfer>;
+ };
+ 
+-&gpu {
++&gpu_panthor {
+ 	mali-supply = <&vdd_gpu_s0>;
+ 	mem-supply = <&vdd_gpu_mem_s0>;
+ 	status = "okay";
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588s-yyt-common.dtsi b/arch/arm64/boot/dts/rockchip/rk3588s-yyt-common.dtsi
+index a9c7bee56..8f3e31fe2 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588s-yyt-common.dtsi
++++ b/arch/arm64/boot/dts/rockchip/rk3588s-yyt-common.dtsi
+@@ -310,7 +310,7 @@ &cpu_b2 {
+ 
+ /* GPU */
+ 
+-&gpu {
++&gpu_panthor {
+ 	mali-supply = <&vdd_gpu_s0>;
+ 	mem-supply = <&vdd_gpu_mem_s0>;
+ 	status = "okay";
+diff --git a/arch/arm64/boot/dts/rockchip/rk3588s.dtsi b/arch/arm64/boot/dts/rockchip/rk3588s.dtsi
+index 677afe4c5..f16504ac4 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3588s.dtsi
++++ b/arch/arm64/boot/dts/rockchip/rk3588s.dtsi
+@@ -2244,7 +2244,7 @@ map2 {
+ 				};
+ 				map3 {
+ 					trip = <&target>;
+-					cooling-device = <&gpu THERMAL_NO_LIMIT THERMAL_NO_LIMIT>;
++					cooling-device = <&gpu_panthor THERMAL_NO_LIMIT THERMAL_NO_LIMIT>;
+ 					contribution = <1024>;
+ 				};
+ 			};

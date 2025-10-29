@@ -1,11 +1,13 @@
 KERNEL_BRANCH=rk-6.1-rkr5.1
 KERNEL_GIT=https://github.com/armbian/linux-rockchip.git
 KERNEL_DEFCONFIG="rockchip_linux_defconfig rk3588_linux.config"
+KERNEL_PATCHES=(rockchip/panthor-dtb.patch)
 KERNEL_EXTRA_CONFIGS=(
-  rockchip-radxa/gpu
-  rockchip-radxa/debug
-  rockchip-radxa/mmc
-  rockchip-radxa/mpp
-  rockchip-radxa/npu
+  rockchip/gpu
+  rockchip/debug
+  rockchip/mmc
+  rockchip/mpp
+  rockchip/npu
+  rockchip/ethernet
 )
 GCC_ARCH=aarch64
