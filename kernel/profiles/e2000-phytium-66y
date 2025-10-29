@@ -1,5 +1,5 @@
 KERNEL_BRANCH=linux-6.6
 KERNEL_GIT=https://gitee.com/phytium_embedded/phytium-linux-kernel.git
 KERNEL_DEFCONFIG=phytium_defconfig
-KERNEL_EXTRA_CONFIGS=(cgroup bpf common-drivers network e2000-extra)
+KERNEL_EXTRA_CONFIGS=(common/cgroup common/bpf common/drivers common/network e2000-phytium/extra)
 GCC_ARCH=aarch64

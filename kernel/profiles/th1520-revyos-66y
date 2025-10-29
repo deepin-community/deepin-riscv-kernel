@@ -1,7 +1,7 @@
 KERNEL_BRANCH=th1520-lts
 KERNEL_GIT=https://github.com/revyos/th1520-linux-kernel.git
 KERNEL_DEFCONFIG=revyos_defconfig
-KERNEL_EXTRA_CONFIGS=(cgroup bpf common-drivers network pvr-egl-workaround)
+KERNEL_EXTRA_CONFIGS=(common/cgroup common/bpf common/drivers common/network th1520-revyos/pvr-egl-workaround)
 KERNEL_PATCHES=(
 	th1520/display-revyos.patch
 	"https://github.com/zhmars/cjktty-patches/raw/refs/heads/master/v6.x/cjktty-6.6.patch"

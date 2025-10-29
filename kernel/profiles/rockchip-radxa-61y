@@ -1,4 +1,5 @@
 KERNEL_BRANCH=linux-6.1-stan-rkr5.1
 KERNEL_GIT=https://github.com/radxa/kernel.git
 KERNEL_DEFCONFIG=rockchip_linux_defconfig
+KERNEL_EXTRA_CONFIGS=(rockchip-radxa/gpu)
 GCC_ARCH=aarch64

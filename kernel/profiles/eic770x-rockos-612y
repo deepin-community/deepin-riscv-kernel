@@ -3,15 +3,5 @@ NOCCACHE=1
 KERNEL_BRANCH=dev/rockos-v6.12.y
 KERNEL_GIT=https://github.com/rockos-riscv/rockos-kernel
 KERNEL_DEFCONFIG=hifive-premier-p550_defconfig
+KERNEL_EXTRA_CONFIGS=(eic770x-rockos/extraconfig)
 PKG_DEPS=(asciidoc)
-
-function override_config() {
-        . $1
-
-	echo CONFIG_RD_GZIP=y >> .config
-	echo CONFIG_SND_USB_AUDIO=y >> .config
-	echo CONFIG_ESWIN_VIRTUAL_DISPLAY=n >> .config
-	echo CONFIG_DRM_IMG=y >> .config
-
-	$MAKE_EXEC olddefconfig
-}

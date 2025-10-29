@@ -11,7 +11,7 @@
 - `GCC_ARCH`: gcc arch
   - default: riscv64
 - `CROSS_COMPILE`: replace cross compile env
-  - default: ${GCC_ARCH}-linux-gnu-
+  - default: ${GCC\_ARCH}-linux-gnu-
 - `NOCCACHE`: ccache is not used
   - default: (unset)
 
@@ -26,10 +26,6 @@
 
 - `KERNEL_DEFCONFIG`: default config
   - default: defconfig
-- `KERNEL_DEFCONFIG_USE`: use external config as defconfig
-  - default: (unset)
-- `KERNEL_CONFIGS_FROM_DEBIAN`: use debian config as defconfig
-  - default: (unset)
 - `KERNEL_EXTRA_CONFIGS`: use external config as appended config
   - default: (unset)
 - `KERNEL_ENABLE_MODULES`: enable modules support (requires native build)

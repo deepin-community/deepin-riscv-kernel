@@ -1,4 +1,4 @@
 KERNEL_BRANCH=sg2042-upstream-v6.16.y
 KERNEL_GIT=https://github.com/revyos/sg2042-vendor-kernel.git
 KERNEL_DEFCONFIG=debian_defconfig
-KERNEL_EXTRA_CONFIGS=(desktop-gpu cgroup bpf common-drivers network)
+KERNEL_EXTRA_CONFIGS=(common/desktop-gpu common/cgroup common/bpf common/drivers common/network)
