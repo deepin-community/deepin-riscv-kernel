@@ -9,5 +9,6 @@ KERNEL_EXTRA_CONFIGS=(
   rockchip/mpp
   rockchip/npu
   rockchip/ethernet
+  rockchip/firmware-compress
 )
 GCC_ARCH=aarch64
