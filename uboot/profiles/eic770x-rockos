@@ -17,7 +17,7 @@ DEFCONFIG_LISTS=(
 )
 UBOOT_RESULT_FILENAMES=(u-boot.bin u-boot.dtb)
 UBOOT_SBI_RESULT_FILENAMES=(fw_payload.bin)
-UBOOT_PATCHES=(ufetch.patch)
+UBOOT_PATCHES=(ufetch-2024.patch)
 
 function override_compile() {
 

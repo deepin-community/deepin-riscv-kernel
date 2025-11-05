@@ -1,6 +1,7 @@
 UBOOT_GIT=https://github.com/radxa-pkg/u-boot-aw2501.git
 UBOOT_BRANCH=main
 UBOOT_DEFCONFIGS=(radxa-cubie-a7z_defconfig radxa-cubie-a7a_defconfig radxa-cubie-a7e_defconfig)
+UBOOT_PATCHES=(allwinner/bootm-size.patch)
 PKG_DEPS=(
   devscripts quilt
   crossbuild-essential-armel
@@ -12,6 +13,12 @@ function override_clone() {
 	export GIT_CLONE_PROTECTION_ACTIVE=false
 	mkdir -p work
 	git clone --recurse-submodules -b "$UBOOT_BRANCH" "$UBOOT_GIT" work/uboot
+}
+
+function override_patch() {
+    pushd src
+        . $1
+    popd
 }
 
 function override_config() {
