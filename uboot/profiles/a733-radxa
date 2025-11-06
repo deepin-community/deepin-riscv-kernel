@@ -1,6 +1,5 @@
 UBOOT_GIT=https://github.com/radxa-pkg/u-boot-aw2501.git
 UBOOT_BRANCH=main
-UBOOT_DEFCONFIGS=(radxa-cubie-a7z_defconfig radxa-cubie-a7a_defconfig radxa-cubie-a7e_defconfig)
 PKG_DEPS=(
   devscripts quilt
   gcc-arm-linux-gnueabi crossbuild-essential-armel
@@ -8,7 +7,7 @@ PKG_DEPS=(
 )
 GCC_ARCH=aarch64
 
-_MAKE_PROFILES=(radxa-cubie-a5e radxa-cubie-a7a radxa-cubie-a7z)
+_MAKE_PROFILES=(radxa-cubie-a7a radxa-cubie-a7z)
 
 function override_clone() {
 	export GIT_CLONE_PROTECTION_ACTIVE=false
@@ -25,6 +24,9 @@ function override_patch() {
           allwinner/compression-1.patch
           allwinner/compression-2.patch
           allwinner/compression-3.patch
+          allwinner/compression-4.patch
+          allwinner/compression-env.patch
+          allwinner/optional-fit.patch
           allwinner/uchar.patch
           ufetch-2018.patch
         )
@@ -36,8 +38,8 @@ function override_patch() {
 }
 
 function override_config() {
-    for _defconfig in ${UBOOT_DEFCONFIGS[@]}; do
-    cat <<EOF | tee -a src/configs/${_defconfig}
+    for _make_profile in ${_MAKE_PROFILES[@]}; do
+    cat <<EOF | tee -a src/configs/${_make_profile}_defconfig
 CONFIG_SUNXI_COMP_DETECT=y
 CONFIG_LZ4=y
 CONFIG_LZMA=y
@@ -45,21 +47,14 @@ CONFIG_LZO=y
 CONFIG_SPL_LZO=y
 CONFIG_SPL_GZIP=y
 CONFIG_CMD_UFETCH=y
-CONFIG_FIT=y
-CONFIG_FIT_SIGNATURE=y
 EOF
     done
 }
 
 function override_compile() {
-    # arisc toolchain (riscv64 for a733)
+    # arisc toolchain
     mkdir -p arisc/ar100s/tools/riscv64-elf-x86_64-20201104
     curl -s -L "https://github.com/radxa/allwinner-toolchain/releases/download/aiot-linux-v1.4.6/riscv64-elf-x86_64-20201104.tar.gz" | tar xzf - -C arisc/ar100s/tools/riscv64-elf-x86_64-20201104
-    
-    # arisc toolchain (or32 for a527)
-    mkdir -p arisc/ar100s/tools/or32-elf-gcc
-    curl -s -L "https://github.com/radxa/allwinner-toolchain/releases/download/aiot-linux-v1.4.6/or32-elf-gcc.tar.bz2" | tar xjf - -C arisc/ar100s/tools/or32-elf-gcc
-
     touch arisc/ar100s/tools/.toolchain.flag
 
     # partition placeholder
@@ -78,15 +73,10 @@ function override_compile() {
         # BOOT0
         make out/${_MAKE_PROFILE}/boot0_sdcard.bin
         make out/${_MAKE_PROFILE}/boot0_spinor.bin
+        make out/${_MAKE_PROFILE}/boot0_ufs.bin
         
-        # BOOT0 (ufs only in a733)
-        [ "$_MAKE_PROFILE" == "radxa-cubie-a5e" ] || make out/${_MAKE_PROFILE}/boot0_ufs.bin
-        
-        # copy scripts (a527)
-        [ "$_MAKE_PROFILE" == "radxa-cubie-a5e" ] || cp setup/u-boot_setup-allwinner-a733.sh out/${_MAKE_PROFILE}/setup.sh
-        
-        # copy scripts (a733)
-        [ "$_MAKE_PROFILE" != "radxa-cubie-a5e" ] || cp setup/u-boot_setup-allwinner.sh out/${_MAKE_PROFILE}/setup.sh
+        # copy scripts
+        cp setup/u-boot_setup-allwinner-a733.sh out/${_MAKE_PROFILE}/setup.sh
         
         # cp placeholder sys_partition_nor.bin
         cp src/sys_partition_nor.bin out/${_MAKE_PROFILE}/

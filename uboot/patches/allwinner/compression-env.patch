@@ -1,0 +1,13 @@
+diff --git a/include/configs/sunxi-common.h b/include/configs/sunxi-common.h
+index 9d51f993568..3c5f8a7515d 100644
+--- a/include/configs/sunxi-common.h
++++ b/include/configs/sunxi-common.h
+@@ -317,6 +317,8 @@
+ 
+ #define MEM_LAYOUT_ENV_SETTINGS \
+ 	"bootm_size=" BOOTM_SIZE "\0" \
++	"kernel_comp_addr_r=" KERNEL_COMP_ADDR_R "\0" \
++	"kernel_comp_size=" KERNEL_COMP_SIZE "\0" \
+ 	"kernel_addr_r=" KERNEL_ADDR_R "\0" \
+ 	"fdt_addr_r=" FDT_ADDR_R "\0" \
+ 	"scriptaddr=" SCRIPT_ADDR_R "\0" \

@@ -1,0 +1,101 @@
+From 93e078807f2e31c25a6fbbb153f62652d75ffe0a Mon Sep 17 00:00:00 2001
+From: Fabrice Fontaine <fontaine.fabrice@gmail.com>
+Date: Fri, 3 May 2019 22:37:05 +0200
+Subject: [PATCH] Make FIT support really optional
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Due to some mistakes in the source code, it was not possible to really
+turn FIT support off. This commit fixes the problem by means of the
+following changes:
+
+- Enclose "bootm_host_load_image" and "bootm_host_load_images" between
+  checks for CONFIG_FIT_SIGNATURE, in common/bootm.c.
+
+- Enclose the declaration of "bootm_host_load_images" between checks for
+  CONFIG_FIT_SIGNATURE, in common/bootm.h.
+
+- Condition the compilation and linking of fit_common.o fit_image.o
+  image-host.o common/image-fit.o to CONFIG_FIT=y, in tools/Makefile.
+
+Signed-off-by: Carlos Santos <casantos@datacom.ind.br>
+[fabio: adapt for 2016.07]
+Signed-off-by: Fabio Estevam <festevam@gmail.com>
+[Ricardo: fix conditional compilation and linking of the files mentioned above
+for 2016.07]
+Signed-off-by: Ricardo Martincoski <ricardo.martincoski@gmail.com>
+[Jörg: adapt for 2019.01]
+Signed-off-by: Jörg Krause <joerg.krause@embedded.rocks>
+[Retrieved from:
+https://git.buildroot.net/buildroot/tree/package/uboot-tools/0003-Make-FIT-support-really-optional.patch]
+Signed-off-by: Fabrice Fontaine <fontaine.fabrice@gmail.com>
+---
+ common/bootm.c  | 2 ++
+ include/bootm.h | 2 ++
+ tools/Makefile  | 6 ++----
+ 3 files changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/common/bootm.c b/common/bootm.c
+index b5d37d38db81..d19375164784 100644
+--- a/common/bootm.c
++++ b/common/bootm.c
+@@ -924,6 +924,7 @@ void memmove_wd(void *to, void *from, size_t len, ulong chunksz)
+ 	memmove(to, from, len);
+ }
+ 
++#if defined(CONFIG_FIT_SIGNATURE)
+ static int bootm_host_load_image(const void *fit, int req_image_type)
+ {
+ 	const char *fit_uname_config = NULL;
+@@ -988,5 +989,6 @@ int bootm_host_load_images(const void *fit, int cfg_noffset)
+ 	/* Return the first error we found */
+ 	return err;
+ }
++#endif
+ 
+ #endif /* ndef USE_HOSTCC */
+diff --git a/include/bootm.h b/include/bootm.h
+index e2cc6d4b99a5..f771b733f51d 100644
+--- a/include/bootm.h
++++ b/include/bootm.h
+@@ -42,7 +42,9 @@ void lynxkdi_boot(image_header_t *hdr);
+ 
+ boot_os_fn *bootm_os_get_boot_func(int os);
+ 
++#if defined(CONFIG_FIT_SIGNATURE)
+ int bootm_host_load_images(const void *fit, int cfg_noffset);
++#endif
+ 
+ int boot_selected_os(int argc, char * const argv[], int state,
+ 		     bootm_headers_t *images, boot_os_fn *boot_fn);
+diff --git a/tools/Makefile b/tools/Makefile
+index eadeba417dcb..e2f572cae1b4 100644
+--- a/tools/Makefile
++++ b/tools/Makefile
+@@ -58,6 +58,7 @@ hostprogs-$(CONFIG_FIT_SIGNATURE) += fit_info fit_check_sign
+ 
+ hostprogs-$(CONFIG_CMD_BOOTEFI_SELFTEST) += file2include
+ 
++FIT_OBJS-$(CONFIG_FIT) := fit_common.o fit_image.o image-host.o common/image-fit.o
+ FIT_SIG_OBJS-$(CONFIG_FIT_SIGNATURE) := common/image-sig.o
+ 
+ # The following files are synced with upstream DTC.
+@@ -80,16 +81,13 @@ ROCKCHIP_OBS = lib/rc4.o rkcommon.o rkimage.o rksd.o rkspi.o
+ # common objs for dumpimage and mkimage
+ dumpimage-mkimage-objs := aisimage.o \
+ 			atmelimage.o \
++			$(FIT_OBJS-y) \
+ 			$(FIT_SIG_OBJS-y) \
+ 			common/bootm.o \
+ 			lib/crc32.o \
+ 			default_image.o \
+ 			lib/fdtdec_common.o \
+ 			lib/fdtdec.o \
+-			fit_common.o \
+-			fit_image.o \
+-			common/image-fit.o \
+-			image-host.o \
+ 			common/image.o \
+ 			imagetool.o \
+ 			imximage.o \
