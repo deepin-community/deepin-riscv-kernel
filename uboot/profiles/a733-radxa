@@ -12,7 +12,7 @@ _MAKE_PROFILES=(radxa-cubie-a7a radxa-cubie-a7z)
 function override_clone() {
 	export GIT_CLONE_PROTECTION_ACTIVE=false
 	mkdir -p work
-	git clone --recurse-submodules -b "$UBOOT_BRANCH" "$UBOOT_GIT" work/uboot
+	git clone --recurse-submodules --depth=1 -b "$UBOOT_BRANCH" "$UBOOT_GIT" work/uboot
 }
 
 function override_patch() {

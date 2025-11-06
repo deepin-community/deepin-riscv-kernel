@@ -1,26 +1,26 @@
 GCC_ARCH=aarch64
 KERNEL_GIT=https://github.com/radxa-pkg/linux-a733.git
 KERNEL_BRANCH=main
-KERNEL_DEFCONFIG="defconfig radxa.config bsp.config"
+KERNEL_DEFCONFIG="defconfig radxa.config radxa_custom.config bsp.config"
 PKG_DEPS=(quilt)
 
 function override_clone() {
 	export GIT_CLONE_PROTECTION_ACTIVE=false
 	mkdir -p work
-	git clone --recurse-submodules -b "$KERNEL_BRANCH" "$KERNEL_GIT" work/kernel
+	git clone --recurse-submodules --depth=1 -b "$KERNEL_BRANCH" "$KERNEL_GIT" work/kernel
 }
 
 function override_patch() {
     # link bsp
-	ln -sf ../bsp src/bsp
+	ln -srf bsp src/bsp
 	
 	# add extra config
 	ln -srf device-a733/configs/default/linux-5.15/bsp_defconfig src/arch/arm64/configs/bsp.config
 	
 	# copy dts
-    ln -srf device-a733/configs/cubie_a7a/linux-5.15/board.dts src/arch/arm64/boot/dts/allwinner/sun60i-a733-cubie-a7a.dts
-    ln -srf device-a733/configs/cubie_a7s/linux-5.15/board.dts src/arch/arm64/boot/dts/allwinner/sun60i-a733-cubie-a7s.dts
-    ln -srf device-a733/configs/cubie_a7z/linux-5.15/board.dts src/arch/arm64/boot/dts/allwinner/sun60i-a733-cubie-a7z.dts
+	for _board in a7a a7s a7z; do
+        ln -srf device-a733/configs/cubie_${_board}/linux-5.15/board.dts src/arch/arm64/boot/dts/allwinner/sun60i-a733-cubie-${_board}.dts
+    done
     cp -aR bsp/configs/linux-5.15/*.dtsi src/arch/arm64/boot/dts/allwinner
     cp -aR bsp/include/dt-bindings/. src/include/dt-bindings
     
@@ -39,7 +39,7 @@ function override_patch() {
 
 function override_compile_env() {
     . $1
-    MAKE_EXEC="$MAKE_EXEC KERNEL_SRC_DIR=$(pwd)/src"
+    MAKE_EXEC="$MAKE_EXEC KBUILD_DEFCONFIG=bsp.config BSP_TOP=bsp/ LICHEE_KERN_DIR=./ KERNEL_SRC_DIR=$(pwd)/src"
 }
 
 function override_config() {
