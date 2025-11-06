@@ -1,13 +1,14 @@
 UBOOT_GIT=https://github.com/radxa-pkg/u-boot-aw2501.git
 UBOOT_BRANCH=main
 UBOOT_DEFCONFIGS=(radxa-cubie-a7z_defconfig radxa-cubie-a7a_defconfig radxa-cubie-a7e_defconfig)
-UBOOT_PATCHES=(allwinner/bootm-size.patch)
 PKG_DEPS=(
   devscripts quilt
-  crossbuild-essential-armel
+  gcc-arm-linux-gnueabi crossbuild-essential-armel
   dh-exec python3-setuptools python3-dev libgnutls28-dev python3-pyelftools xxd lib32stdc++6 lib32z1 dos2unix
 )
 GCC_ARCH=aarch64
+
+_MAKE_PROFILES=(radxa-cubie-a5e radxa-cubie-a7a radxa-cubie-a7z)
 
 function override_clone() {
 	export GIT_CLONE_PROTECTION_ACTIVE=false
@@ -16,9 +17,15 @@ function override_clone() {
 }
 
 function override_patch() {
+    dh_quilt_patch
+    
     pushd src
+        UBOOT_PATCHES=(allwinner/bootm-size.patch allwinner/compression.patch allwinner/uchar.patch ufetch-2018.patch)
         . $1
     popd
+    
+    UBOOT_PATCHES=(allwinner/radxa-use-system-arm-toolchain.patch)
+    . $1
 }
 
 function override_config() {
@@ -29,17 +36,53 @@ CONFIG_LZ4=y
 CONFIG_LZMA=y
 CONFIG_LZO=y
 CONFIG_SPL_LZO=y
-CONFIG_SPL_GZIP=y   
+CONFIG_SPL_GZIP=y
+CONFIG_CMD_UFETCH=y
 EOF
     done
 }
 
 function override_compile() {
-	make install_toolchain
-	mkdir -p arisc/ar100s/tools/riscv64-elf-x86_64-20201104
-	tar xf arisc/ar100s/tools/riscv64-elf-x86_64-20201104.tar.gz -C arisc/ar100s/tools/riscv64-elf-x86_64-20201104
-	
-    make deb
+    # arisc toolchain (riscv64 for a733)
+    mkdir -p arisc/ar100s/tools/riscv64-elf-x86_64-20201104
+    curl -s -L "https://github.com/radxa/allwinner-toolchain/releases/download/aiot-linux-v1.4.6/riscv64-elf-x86_64-20201104.tar.gz" | tar xzf - -C arisc/ar100s/tools/riscv64-elf-x86_64-20201104
     
-    cp -avr debian/u-boot-aw2501/usr/lib/u-boot/* $OUTPUT_DIR/
+    # arisc toolchain (or32 for a527)
+    mkdir -p arisc/ar100s/tools/or32-elf-gcc
+    curl -s -L "https://github.com/radxa/allwinner-toolchain/releases/download/aiot-linux-v1.4.6/or32-elf-gcc.tar.bz2" | tar xjf - -C arisc/ar100s/tools/or32-elf-gcc
+
+    touch arisc/ar100s/tools/.toolchain.flag
+
+    # partition placeholder
+    truncate -s 16M /tmp/gpt.img
+    sgdisk -o -n 1:-128K:0 -c 1:env /tmp/gpt.img
+    dd conv=notrunc,fsync if=/tmp/gpt.img of=src/sys_partition_nor.bin bs=512 count=34
+
+    for _MAKE_PROFILE in ${_MAKE_PROFILES[@]}; do
+        # make output dir
+        mkdir -p out/${_MAKE_PROFILE}
+    
+        # build and pack u-boot
+        make ${_MAKE_PROFILE}_pack
+        cp src/boot_package-${_MAKE_PROFILE}.fex out/${_MAKE_PROFILE}/boot_package.fex
+        
+        # BOOT0
+        make out/${_MAKE_PROFILE}/boot0_sdcard.bin
+        make out/${_MAKE_PROFILE}/boot0_spinor.bin
+        
+        # BOOT0 (ufs only in a733)
+        [ "$_MAKE_PROFILE" == "radxa-cubie-a5e" ] || make out/${_MAKE_PROFILE}/boot0_ufs.bin
+        
+        # copy scripts (a527)
+        [ "$_MAKE_PROFILE" == "radxa-cubie-a5e" ] || cp setup/u-boot_setup-allwinner-a733.sh out/${_MAKE_PROFILE}/setup.sh
+        
+        # copy scripts (a733)
+        [ "$_MAKE_PROFILE" != "radxa-cubie-a5e" ] || cp setup/u-boot_setup-allwinner.sh out/${_MAKE_PROFILE}/setup.sh
+        
+        # cp placeholder sys_partition_nor.bin
+        cp src/sys_partition_nor.bin out/${_MAKE_PROFILE}/
+    done
+
+    # collect results
+    cp -avr out/* $OUTPUT_DIR/
 }

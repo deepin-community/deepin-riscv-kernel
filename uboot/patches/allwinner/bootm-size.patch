@@ -1,7 +1,16 @@
 diff --git a/include/configs/sunxi-common.h b/include/configs/sunxi-common.h
-index 9d51f99356..d6bdb57e08 100644
+index 9d51f99356..f9841e63a9 100644
 --- a/include/configs/sunxi-common.h
 +++ b/include/configs/sunxi-common.h
+@@ -44,7 +44,7 @@
+  * for really big kernels, say 256MB for now.
+  * Scripts, PXE and DTBs should go afterwards, leaving the rest for the initrd.
+  */
+-#define BOOTM_SIZE        __stringify(0xa000000)
++#define BOOTM_SIZE        __stringify(0xe000000)
+ #define KERNEL_ADDR_R     __stringify(SDRAM_OFFSET(0080000))
+ #define KERNEL_COMP_ADDR_R __stringify(SDRAM_OFFSET(4000000))
+ #define KERNEL_COMP_SIZE  __stringify(0xb000000)
 @@ -60,7 +60,7 @@
   * 32M uncompressed kernel, 16M compressed kernel, 1M fdt,
   * 1M script, 1M pxe, 1M dt overlay and the ramdisk at the end.

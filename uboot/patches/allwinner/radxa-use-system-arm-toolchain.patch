@@ -1,0 +1,10 @@
+diff --git a/.github/local/Makefile.local b/.github/local/Makefile.local
+index 2b085e3..70b9654 100644
+--- a/.github/local/Makefile.local
++++ b/.github/local/Makefile.local
+@@ -1,4 +1,4 @@
+-CROSS_COMPILE := $(CURDIR)/toolchains/gcc-linaro-7.2.1-2017.11-x86_64_arm-linux-gnueabi/bin/arm-linux-gnueabi-
++CROSS_COMPILE := arm-linux-gnueabi-
+ CUSTOM_MAKE_DEFINITIONS := DTS_PATH=arch/arm/dts \
+        LICHEE_CHIP_CONFIG_DIR=/tmp \
+        LICHEE_PLAT_OUT=/tmp \
