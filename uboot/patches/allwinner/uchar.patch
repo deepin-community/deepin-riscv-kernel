@@ -1,13 +1,13 @@
 diff --git a/include/linux/types.h b/include/linux/types.h
-index 7c33e7adbc..f3197c9906 100644
+index 7c33e7adbc2..f3197c99066 100644
 --- a/include/linux/types.h
 +++ b/include/linux/types.h
-@@ -85,7 +85,7 @@ typedef unsigned int          u_int;
- typedef unsigned long          u_long;
+@@ -85,7 +85,7 @@ typedef unsigned int		u_int;
+ typedef unsigned long		u_long;
  
  /* sysv */
--typedef unsigned char          unchar;
-+typedef unsigned char          uchar;
- typedef unsigned short         ushort;
- typedef unsigned int           uint;
- typedef unsigned long          ulong;
+-typedef unsigned char		unchar;
++typedef unsigned char		uchar;
+ typedef unsigned short		ushort;
+ typedef unsigned int		uint;
+ typedef unsigned long		ulong;

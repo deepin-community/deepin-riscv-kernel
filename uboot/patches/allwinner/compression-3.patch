@@ -1,41 +1,8 @@
-From 414c34ed555b8ce5c260cf641261ecf45beca251 Mon Sep 17 00:00:00 2001
-From: Atish Patra <atish.patra@wdc.com>
-Date: Thu, 5 Mar 2020 16:24:23 -0800
-Subject: [PATCH] image: Add compressed Image parsing support in booti.
-
-Add compressed Image parsing support so that booti can parse both
-flat and compressed Image to boot Linux. Currently, it is difficult
-to calculate a safe address for every board where the compressed
-image can be decompressed. It is also not possible to figure out the
-size of the compressed file as well. Thus, user need to set two
-additional environment variables kernel_comp_addr_r and filesize to
-make this work.
-
-Following compression methods are supported for now.
-lzma, lzo, bzip2, gzip.
-
-lz4 support is not added as ARM64 kernel generates a lz4 compressed
-image with legacy header which U-Boot doesn't know how to parse and
-decompress.
-
-Tested on HiFive Unleashed and Qemu for RISC-V.
-Tested on Qemu for ARM64.
-
-Signed-off-by: Atish Patra <atish.patra@wdc.com>
-Reviewed-by: Tom Rini <trini@konsulko.com>
-[trini: Fix minor rST formatting problems]
-Signed-off-by: Tom Rini <trini@konsulko.com>
----
- cmd/booti.c                | 40 +++++++++++++++++++++++++-
- doc/README.distro          | 12 ++++++++
- doc/board/sifive/fu540.rst | 58 ++++++++++++++++++++++++++++++++++++++
- 3 files changed, 109 insertions(+), 1 deletion(-)
-
 diff --git a/cmd/booti.c b/cmd/booti.c
-index de5058236e0a..4fff8cfcf69f 100644
+index fd65e85e6f1..401cc1d85d4 100644
 --- a/cmd/booti.c
 +++ b/cmd/booti.c
-@@ -14,6 +14,7 @@
+@@ -13,6 +13,7 @@
  #include <linux/kernel.h>
  #include <linux/sizes.h>
  
@@ -43,7 +10,7 @@ index de5058236e0a..4fff8cfcf69f 100644
  /*
   * Image booting support
   */
-@@ -24,6 +25,12 @@ static int booti_start(cmd_tbl_t *cmdtp, int flag, int argc,
+@@ -23,6 +24,12 @@ static int booti_start(cmd_tbl_t *cmdtp, int flag, int argc,
  	ulong ld;
  	ulong relocated_addr;
  	ulong image_size;
@@ -56,7 +23,7 @@ index de5058236e0a..4fff8cfcf69f 100644
  
  	ret = do_bootm_states(cmdtp, flag, argc, argv, BOOTM_STATE_START,
  			      images, 1);
-@@ -38,6 +45,33 @@ static int booti_start(cmd_tbl_t *cmdtp, int flag, int argc,
+@@ -37,6 +44,33 @@ static int booti_start(cmd_tbl_t *cmdtp, int flag, int argc,
  		debug("*  kernel: cmdline image address = 0x%08lx\n", ld);
  	}
  
@@ -90,7 +57,7 @@ index de5058236e0a..4fff8cfcf69f 100644
  	ret = booti_setup(ld, &relocated_addr, &image_size, false);
  	if (ret != 0)
  		return 1;
-@@ -100,10 +134,14 @@ int do_booti(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+@@ -92,10 +126,14 @@ int do_booti(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
  #ifdef CONFIG_SYS_LONGHELP
  static char booti_help_text[] =
  	"[addr [initrd[:size]] [fdt]]\n"

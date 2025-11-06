@@ -1,5 +1,5 @@
 diff --git a/cmd/Kconfig b/cmd/Kconfig
-index da627fed8d..d70f03e444 100644
+index da627fed8db..d70f03e444c 100644
 --- a/cmd/Kconfig
 +++ b/cmd/Kconfig
 @@ -177,6 +177,12 @@ config CMD_CPU
@@ -16,7 +16,7 @@ index da627fed8d..d70f03e444 100644
  	bool "license"
  	select BUILD_BIN2C
 diff --git a/cmd/Makefile b/cmd/Makefile
-index 216af68208..8b4c5d0f31 100644
+index 216af68208e..8b4c5d0f31a 100644
 --- a/cmd/Makefile
 +++ b/cmd/Makefile
 @@ -43,6 +43,7 @@ obj-$(CONFIG_CMD_CPU) += cpu.o
@@ -29,7 +29,7 @@ index 216af68208..8b4c5d0f31 100644
  obj-$(CONFIG_CMD_DIAG) += diag.o
 diff --git a/cmd/ufetch.c b/cmd/ufetch.c
 new file mode 100644
-index 0000000000..0e99c68be4
+index 00000000000..0e99c68be49
 --- /dev/null
 +++ b/cmd/ufetch.c
 @@ -0,0 +1,257 @@

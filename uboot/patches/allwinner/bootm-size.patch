@@ -1,5 +1,5 @@
 diff --git a/include/configs/sunxi-common.h b/include/configs/sunxi-common.h
-index 9d51f99356..f9841e63a9 100644
+index 9d51f993568..f9841e63a90 100644
 --- a/include/configs/sunxi-common.h
 +++ b/include/configs/sunxi-common.h
 @@ -44,7 +44,7 @@

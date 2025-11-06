@@ -1,0 +1,80 @@
+diff --git a/common/image.c b/common/image.c
+index 648e3bc32e9..be30d836a29 100644
+--- a/common/image.c
++++ b/common/image.c
+@@ -190,6 +190,14 @@ struct table_info {
+ 	const table_entry_t *table;
+ };
+ 
++static const struct comp_magic_map image_comp[] = {
++	{	IH_COMP_BZIP2,	"bzip2",	{0x42, 0x5a},},
++	{	IH_COMP_GZIP,	"gzip",		{0x1f, 0x8b},},
++	{	IH_COMP_LZMA,	"lzma",		{0x5d, 0x00},},
++	{	IH_COMP_LZO,	"lzo",		{0x89, 0x4c},},
++	{	IH_COMP_NONE,	"none",		{},	},
++};
++
+ static const struct table_info table_info[IH_COUNT] = {
+ 	{ "architecture", IH_ARCH_COUNT, uimage_arch },
+ 	{ "compression", IH_COMP_COUNT, uimage_comp },
+@@ -395,6 +403,21 @@ static void print_decomp_msg(int comp_type, int type, bool is_xip)
+ 		printf("   Uncompressing %s\n", name);
+ }
+ 
++int image_decomp_type(const unsigned char *buf, ulong len)
++{
++	const struct comp_magic_map *cmagic = image_comp;
++
++	if (len < 2)
++		return -EINVAL;
++
++	for (; cmagic->comp_id > 0; cmagic++) {
++		if (!memcmp(buf, cmagic->magic, 2))
++			break;
++	}
++
++	return cmagic->comp_id;
++}
++
+ int image_decomp(int comp, ulong load, ulong image_start, int type,
+ 		 void *load_buf, void *image_buf, ulong image_len,
+ 		 uint unc_len, ulong *load_end)
+diff --git a/include/image.h b/include/image.h
+index 59bb6f9d9e6..f879a1004fb 100644
+--- a/include/image.h
++++ b/include/image.h
+@@ -445,6 +445,15 @@ typedef struct table_entry {
+ 	char	*lname;		/* long (output) name to print for messages */
+ } table_entry_t;
+ 
++/*
++ * Compression type and magic number mapping table.
++ */
++struct comp_magic_map {
++	int		comp_id;
++	const char	*name;
++	unsigned char	magic[2];
++};
++
+ /*
+  * get_table_entry_id() scans the translation table trying to find an
+  * entry that matches the given short name. If a matching entry is
+@@ -849,6 +858,18 @@ static inline int image_check_target_arch(const image_header_t *hdr)
+ }
+ #endif /* USE_HOSTCC */
+ 
++/**
++ * image_decomp_type() - Find out compression type of an image
++ *
++ * @buf:	Address in U-Boot memory where image is loaded.
++ * @len:	Length of the compressed image.
++ * @return	compression type or IH_COMP_NONE if not compressed.
++ *
++ * Note: Only following compression types are supported now.
++ * lzo, lzma, gzip, bzip2
++ */
++int image_decomp_type(const unsigned char *buf, ulong len);
++
+ /**
+  * image_decomp() - decompress an image
+  *

@@ -20,7 +20,14 @@ function override_patch() {
     dh_quilt_patch
     
     pushd src
-        UBOOT_PATCHES=(allwinner/bootm-size.patch allwinner/compression.patch allwinner/uchar.patch ufetch-2018.patch)
+        UBOOT_PATCHES=(
+          allwinner/bootm-size.patch
+          allwinner/compression-1.patch
+          allwinner/compression-2.patch
+          allwinner/compression-3.patch
+          allwinner/uchar.patch
+          ufetch-2018.patch
+        )
         . $1
     popd
     
@@ -38,6 +45,8 @@ CONFIG_LZO=y
 CONFIG_SPL_LZO=y
 CONFIG_SPL_GZIP=y
 CONFIG_CMD_UFETCH=y
+CONFIG_FIT=y
+CONFIG_FIT_SIGNATURE=y
 EOF
     done
 }
