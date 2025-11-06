@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 TARGET_TYPE=$1
 TARGET_PROFILE=$2
 ACTION_STAGE=$3
