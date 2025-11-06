@@ -1,6 +1,7 @@
 GCC_ARCH=aarch64
 KERNEL_GIT=https://github.com/radxa-pkg/linux-a733.git
 KERNEL_BRANCH=main
+KERNEL_DEFCONFIG="defconfig radxa.config bsp.config"
 PKG_DEPS=(quilt)
 
 function override_clone() {
@@ -10,9 +11,23 @@ function override_clone() {
 }
 
 function override_patch() {
-	cp .github/local/Makefile.local .
-	make -f ./Makefile.local
+    # link bsp
+	ln -sf ../bsp src/bsp
+	
+	# add extra config
+	ln -srf device-a733/configs/default/linux-5.15/bsp_defconfig src/arch/arm64/configs/bsp.config
+	
+	# copy dts
+    ln -srf device-a733/configs/cubie_a7a/linux-5.15/board.dts src/arch/arm64/boot/dts/allwinner/sun60i-a733-cubie-a7a.dts
+    ln -srf device-a733/configs/cubie_a7s/linux-5.15/board.dts src/arch/arm64/boot/dts/allwinner/sun60i-a733-cubie-a7s.dts
+    ln -srf device-a733/configs/cubie_a7z/linux-5.15/board.dts src/arch/arm64/boot/dts/allwinner/sun60i-a733-cubie-a7z.dts
+    cp -aR bsp/configs/linux-5.15/*.dtsi src/arch/arm64/boot/dts/allwinner
+    cp -aR bsp/include/dt-bindings/. src/include/dt-bindings
+    
+    # add version info
+    echo "#define AW_BSP_VERSION \"$(git log -n 1 --abbrev=10 --pretty=format:"%h"), $(date "+%Y-%m-%d %H:%M:%S"), RadxaOS SDK\"" > bsp/include/sunxi-autogen.h
 
+    # add radxa patch
 	dh_quilt_patch
 
 	pushd src
@@ -22,15 +37,20 @@ function override_patch() {
 	popd
 }
 
+function override_compile_env() {
+    . $1
+    MAKE_EXEC="$MAKE_EXEC KERNEL_SRC_DIR=$(pwd)/src"
+}
+
 function override_config() {
 	pushd src
-		$MAKE_EXEC KERNEL_SRC_DIR=$(pwd) KERNEL_DEFCONFIG=bsp.config defconfig radxa.config -j$(nproc)
+		. $1
 	popd
 }
 
 function override_compile() {
 	pushd src
-		$MAKE_EXEC LOCALVERSION="-${TARGET_PROFILE}" KERNEL_SRC_DIR=$(pwd) bindeb-pkg -j$(nproc)
+		. $1
 	popd
 }
 
