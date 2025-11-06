@@ -7,8 +7,8 @@ $MAKE_EXEC $KERNEL_DEFCONFIG
 if [ ${#KERNEL_EXTRA_CONFIGS[@]} -ne 0 ]; then
 	concat_config=$(mktemp)
 	for configfile in "${KERNEL_EXTRA_CONFIGS[@]}"; do
-		if [ -f ../../kernel/defconfigs/$configfile ]; then
-			cat ../../kernel/defconfigs/$configfile >> $concat_config
+		if [ -f $BASEDIR/kernel/defconfigs/$configfile ]; then
+			cat $BASEDIR/kernel/defconfigs/$configfile >> $concat_config
 		fi
 	done
 
@@ -33,4 +33,3 @@ fi
 
 # If config restart, use default config
 $MAKE_EXEC olddefconfig
-

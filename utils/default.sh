@@ -12,3 +12,4 @@ CCACHE_DIR=/tmp/runnerccache
 CCACHE_COMPILERTYPE=gcc
 CCACHE_SIZE=1GiB
 
+BASEDIR=$(pwd)

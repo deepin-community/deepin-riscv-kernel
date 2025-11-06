@@ -8,6 +8,6 @@ KERNEL_PATCHES=(
 )
 
 function override_config() {
-	sed -i '/UART/d; /80211/d' ../../kernel/defconfigs/common-drivers
+	sed -i '/UART/d; /80211/d' $BASEDIR/kernel/defconfigs/common-drivers
 	. $1
 }
