@@ -1,0 +1,36 @@
+UBOOT_GIT=https://gitlab.collabora.com/hardware-enablement/rockchip-3588/u-boot.git
+UBOOT_BRANCH=rockchip
+UBOOT_DEFCONFIGS=(dshanpi-a1-rk3576_defconfig)
+UBOOT_RESULT_FILENAMES=(
+	rk3576_spl_loader_*.bin
+	idbloader.img
+	u-boot.itb
+	u-boot-rockchip.bin
+	u-boot-rockchip-spi.bin
+)
+UBOOT_PATCHES=(rockchip/dshanpi.patch)
+GCC_ARCH=aarch64
+PKG_DEPS=(python3-pyelftools)
+NOCCACHE=1
+
+function override_clone() {
+	. $1
+	git clone --depth 1 https://gitlab.collabora.com/hardware-enablement/rockchip-3588/rkbin.git work/rkbin
+	git clone --depth 1 https://gitlab.collabora.com/hardware-enablement/rockchip-3588/trusted-firmware-a.git work/tfa
+	export ROCKCHIP_TPL=$(find $(pwd)/work/rkbin/bin/rk35/ -name "rk3576_ddr_*" | grep -v -e ultra -e eyescan | sort -r | head -n 1)
+}
+
+function override_compile() {
+	pushd ../tfa
+		make realclean
+		make PLAT=rk3576 bl31
+		export BL31=$(pwd)/build/rk3576/release/bl31/bl31.elf
+	popd
+
+	. $1
+
+	pushd ../rkbin
+		./tools/boot_merger RKBOOT/RK3576MINIALL.ini
+		find . -name "rk3588_spl_loader_*" | xargs -I @ cp -av @ $OUTPUT_DIR/
+	popd
+}
