@@ -1,9 +1,41 @@
 UBOOT_GIT=https://gitlab.collabora.com/hardware-enablement/rockchip-3588/u-boot.git
 UBOOT_BRANCH=rockchip
-UBOOT_DEFCONFIGS=(rock5b-rk3588_defconfig)
-UBOOT_RESULT_FILENAMES=(
+UBOOT_DEFCONFIGS=(
+    cm3588-nas-rk3588_defconfig
+    coolpi-4b-rk3588s_defconfig
+    coolpi-cm5-evb-rk3588_defconfig
+    coolpi-cm5-genbook-rk3588_defconfig
+    evb-rk3588_defconfig
+    gameforce-ace-rk3588s_defconfig
+    generic-rk3588_defconfig
+    jaguar-rk3588_defconfig
+    khadas-edge2-rk3588s_defconfig
+    nanopc-t6-rk3588_defconfig
+    nanopi-r6c-rk3588s_defconfig
+    nanopi-r6s-rk3588s_defconfig
+    neu6a-io-rk3588_defconfig
+    neu6b-io-rk3588_defconfig
+    nova-rk3588s_defconfig
+    odroid-m2-rk3588s_defconfig
+    orangepi-5-max-rk3588_defconfig
+    orangepi-5-plus-rk3588_defconfig
+    orangepi-5-rk3588s_defconfig
+    orangepi-5-ultra-rk3588_defconfig
+    quartzpro64-rk3588_defconfig
+    rock5a-rk3588s_defconfig
+    rock5b-rk3588_defconfig
+    rock-5c-rk3588s_defconfig
+    rock-5-itx-rk3588_defconfig
+    sige7-rk3588_defconfig
+    tiger-rk3588_defconfig
+    toybrick-rk3588_defconfig
+    turing-rk1-rk3588_defconfig
+)
+MISC_RESULT_FILENAMES=(
 	rk3588_spl_loader_*.bin
 	idbloader.img
+)
+UBOOT_RESULT_FILENAMES=(
 	u-boot.itb
 	u-boot-rockchip.bin
 	u-boot-rockchip-spi.bin

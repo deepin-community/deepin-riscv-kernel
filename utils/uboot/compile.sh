@@ -36,3 +36,7 @@ done
 $MAKE_EXEC clean
 
 done
+
+for MISC_RESULT_FILENAME in "${MISC_RESULT_FILENAMES[@]}"; do
+	find . -name "$MISC_RESULT_FILENAME" | xargs -I @ cp -av @ $OUTPUT_DIR/
+done
