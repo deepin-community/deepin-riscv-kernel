@@ -6,13 +6,10 @@ UBOOT_DEFCONFIGS=(
     rock4d-rk3576_defconfig
     roc-pc-rk3576_defconfig
     sige5-rk3576_defconfig
-    "generic-rk3576_defconfig dshanpi-a1-rk3576_defconfig"
-)
-MISC_RESULT_FILENAMES=(
-	rk3576_spl_loader_*.bin
-	idbloader.img
+    dshanpi-a1-rk3576_defconfig
 )
 UBOOT_RESULT_FILENAMES=(
+	idbloader.img
 	u-boot.itb
 	u-boot-rockchip.bin
 	u-boot-rockchip-spi.bin
@@ -36,10 +33,10 @@ function override_compile() {
 		export BL31=$(pwd)/build/rk3576/release/bl31/bl31.elf
 	popd
 
-	. $1
-
 	pushd ../rkbin
 		./tools/boot_merger RKBOOT/RK3576MINIALL.ini
 		find . -name "rk3576_spl_loader_*" | xargs -I @ cp -av @ $OUTPUT_DIR/
 	popd
+	
+    . $1
 }

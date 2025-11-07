@@ -31,14 +31,11 @@ UBOOT_DEFCONFIGS=(
     toybrick-rk3588_defconfig
     turing-rk1-rk3588_defconfig
 )
-MISC_RESULT_FILENAMES=(
-	rk3588_spl_loader_*.bin
-	idbloader.img
-)
 UBOOT_RESULT_FILENAMES=(
 	u-boot.itb
 	u-boot-rockchip.bin
 	u-boot-rockchip-spi.bin
+	idbloader.img
 )
 GCC_ARCH=aarch64
 PKG_DEPS=(python3-pyelftools)
@@ -58,10 +55,10 @@ function override_compile() {
 		export BL31=$(pwd)/build/rk3588/release/bl31/bl31.elf
 	popd
 
-	. $1
-
 	pushd ../rkbin
 		./tools/boot_merger RKBOOT/RK3588MINIALL.ini
 		find . -name "rk3588_spl_loader_*" | xargs -I @ cp -av @ $OUTPUT_DIR/
 	popd
+
+    . $1
 }
