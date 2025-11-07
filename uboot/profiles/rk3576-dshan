@@ -1,11 +1,7 @@
-UBOOT_GIT=https://gitlab.collabora.com/hardware-enablement/rockchip-3588/u-boot.git
-UBOOT_BRANCH=rockchip
+UBOOT_GIT=https://github.com/dshanpi/dshanpi-a1-uboot.git
+UBOOT_BRANCH=master
 UBOOT_DEFCONFIGS=(
-    evb-rk3576_defconfig
-    generic-rk3576_defconfig
-    rock4d-rk3576_defconfig
-    roc-pc-rk3576_defconfig
-    sige5-rk3576_defconfig
+    dshanpi-a1-rk3576_defconfig
 )
 UBOOT_RESULT_FILENAMES=(
 	idbloader.img
