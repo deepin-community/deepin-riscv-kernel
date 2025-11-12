@@ -1,0 +1,28 @@
+From 2c5a06c8cff1fafccb7d1b2bcd03f15b9c5ff151 Mon Sep 17 00:00:00 2001
+From: Andrew Gigena <mail@andrewgigena.dev>
+Date: Tue, 5 Aug 2025 22:31:05 -0300
+Subject: [PATCH 59/77] arm64: dts: qcom: google-flame: Add charger node
+
+---
+ arch/arm64/boot/dts/qcom/sm8150-google-flame.dts | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/sm8150-google-flame.dts b/arch/arm64/boot/dts/qcom/sm8150-google-flame.dts
+index 2869435510d7..916078cce264 100644
+--- a/arch/arm64/boot/dts/qcom/sm8150-google-flame.dts
++++ b/arch/arm64/boot/dts/qcom/sm8150-google-flame.dts
+@@ -993,6 +993,11 @@ usbc-therm@2 {
+ &pm8150b_fg {
+ 	status = "okay";
+ 	monitored-battery = <&battery>;
++	power-supplies = <&pm8150b_charger>;
++};
++&pm8150b_charger {
++	status = "okay";
++	monitored-battery = <&battery>;
+ };
+ 
+ &pm8150b_vbus {
+-- 
+2.51.1
+

@@ -1,0 +1,1074 @@
+From 0f8c32d6dd5795b7883545bbbbe946fa74834765 Mon Sep 17 00:00:00 2001
+From: Andrew Gigena <mail@andrewgigena.dev>
+Date: Tue, 5 Aug 2025 22:31:28 -0300
+Subject: [PATCH 60/77] Input: touchscreen: fts_touch: fix all compilation
+ warnings
+
+---
+ drivers/input/touchscreen/fts_touch/fts.c     | 278 ++----------------
+ drivers/input/touchscreen/fts_touch/fts.h     |   4 +
+ .../fts_touch/fts_lib/ftsCompensation.c       | 159 ++++++----
+ .../touchscreen/fts_touch/fts_lib/ftsCore.c   |  94 ++++--
+ .../touchscreen/fts_touch/fts_lib/ftsFrame.c  |  10 -
+ .../touchscreen/fts_touch/fts_lib/ftsTest.c   |  31 +-
+ 6 files changed, 226 insertions(+), 350 deletions(-)
+
+diff --git a/drivers/input/touchscreen/fts_touch/fts.c b/drivers/input/touchscreen/fts_touch/fts.c
+index 1c573e648b9e..6a9e29b01781 100644
+--- a/drivers/input/touchscreen/fts_touch/fts.c
++++ b/drivers/input/touchscreen/fts_touch/fts.c
+@@ -2496,11 +2496,6 @@ static ssize_t infoblock_getdata_show(struct device *dev,
+ 		goto END;
+ 	}
+ 	data = kmalloc(INFO_BLOCK_SIZE * sizeof(u8), GFP_KERNEL);
+-	if (data == NULL) {
+-		count += scnprintf(&buf[count], PAGE_SIZE - count,
+-				   "kmalloc failed\n");
+-		goto END;
+-	}
+ 	res = fts_writeReadU8UX(FTS_CMD_HW_REG_R, ADDR_SIZE_HW_REG,
+ 				ADDR_INFOBLOCK, data, INFO_BLOCK_SIZE,
+ 				DUMMY_HW_REG);
+@@ -2876,6 +2871,7 @@ static bool fts_enter_pointer_event_handler(struct fts_ts_info *info, unsigned
+ 			__set_bit(touchId, &info->stylus_id);
+ 			break;
+ 		}
++		fallthrough;
+ #endif
+ 	/* TODO: customer can implement a different strategy for each kind of
+ 	 * touch */
+@@ -2966,14 +2962,11 @@ static bool fts_leave_pointer_event_handler(struct fts_ts_info *info, unsigned
+ 			__clear_bit(touchId, &info->stylus_id);
+ 			break;
+ 		}
++		fallthrough;
+ #endif
+-
+ 	case TOUCH_TYPE_FINGER:
+-	/* pr_info("%s : It is a finger!\n", __func__); */
+ 	case TOUCH_TYPE_GLOVE:
+-	/* pr_info("%s : It is a glove!\n", __func__); */
+ 	case TOUCH_TYPE_PALM:
+-	/* pr_info("%s : It is a palm!\n", __func__); */
+ 	case TOUCH_TYPE_HOVER:
+ 		tool = MT_TOOL_FINGER;
+ 		__clear_bit(touchId, &info->touch_id);
+@@ -4147,230 +4140,6 @@ static void fts_offload_report(void *handle,
+ }
+ #endif /* CONFIG_TOUCHSCREEN_OFFLOAD */
+ 
+-/*
+- * Read the display panel's extinfo from the display driver.
+- *
+- * The display driver finds out the extinfo is available for a panel based on
+- * the device tree, but cannot read the extinfo itself until the DSI bus is
+- * initialized. Since the extinfo is not guaranteed to be available at the time
+- * the touch driver is probed or even when the automatic firmware update work is
+- * run. The display driver's API for reading extinfo does allow a client to
+- * query the size of the expected data and whether it is available.
+- *
+- * This function retrieves the extinfo from the display driver with an optional
+- * retry period to poll the display driver before giving up.
+- *
+- * @return	0 if success, -EBUSY if timeout
+- */
+-static int fts_read_panel_extinfo(struct fts_ts_info *info, int wait_seconds)
+-{
+-	const int RETRIES_PER_S = 4;
+-	const int MS_PER_RETRY = 1000 / RETRIES_PER_S;
+-	ssize_t len = -EBUSY;
+-	int retries = (wait_seconds <= 0) ? 0 : wait_seconds * RETRIES_PER_S;
+-	int ret = 0;
+-
+-	/* Was extinfo previously retrieved? */
+-	if (info->extinfo.is_read)
+-		return 0;
+-
+-	/* Extinfo should not be retrieved if the driver was unable to identify
+-	 * the panel via its panelmap. Consider the extinfo zero-length.
+-	 */
+-	if (!info->board->panel) {
+-		info->extinfo.is_read = true;
+-		info->extinfo.size = 0;
+-		return 0;
+-	}
+-
+-	/* Obtain buffer size */
+-	len = dsi_panel_read_vendor_extinfo(info->board->panel, NULL, 0);
+-	if (len == 0) {
+-		/* No extinfo to be consumed */
+-		info->extinfo.size = 0;
+-		info->extinfo.is_read = true;
+-		return 0;
+-	} else if (len < 0) {
+-		ret = len;
+-		pr_err("%s: dsi_panel_read_vendor_extinfo returned unexpected error = %d.\n",
+-		       __func__, ret);
+-		goto error;
+-	} else {
+-		info->extinfo.data = kzalloc(len, GFP_KERNEL);
+-		if (!info->extinfo.data) {
+-			pr_err("%s: failed to allocate extinfo. len=%d.\n",
+-			       __func__, len);
+-			ret = -ENOMEM;
+-			goto error;
+-		}
+-		info->extinfo.size = len;
+-	}
+-
+-	/* Read vendor extinfo data */
+-	do {
+-		len = dsi_panel_read_vendor_extinfo(info->board->panel,
+-						    info->extinfo.data,
+-						    info->extinfo.size);
+-		if (len == -EBUSY) {
+-			pr_debug("%s: sleeping %dms.\n", __func__,
+-				 MS_PER_RETRY);
+-			msleep(MS_PER_RETRY);
+-		} else if (len == info->extinfo.size) {
+-			info->extinfo.is_read = true;
+-			pr_debug("%s: Ultimately waited %d seconds.\n",
+-				 __func__,
+-				 wait_seconds - (retries / RETRIES_PER_S));
+-			return 0;
+-		} else {
+-			pr_err("%s: dsi_panel_read_vendor_extinfo returned error = %d\n",
+-			       __func__, len);
+-			ret = len;
+-			goto error;
+-		}
+-	} while (--retries > 0);
+-
+-	/* Time out after retrying for wait_seconds */
+-	pr_err("%s: Timed out after waiting %d seconds.\n", __func__,
+-	       wait_seconds);
+-	ret = -EBUSY;
+-
+-error:
+-	kfree(info->extinfo.data);
+-	info->extinfo.data = NULL;
+-	info->extinfo.size = 0;
+-	info->extinfo.is_read = false;
+-	return ret;
+-}
+-
+-/*
+- * Determine the display panel based on the device tree and any extinfo read
+- * from the panel.
+- *
+- * Basic panel detection (e.g., unique part numbers) is performed by polling for
+- * connected drm_panels. Next, an override table from the device tree is used to
+- * parse the panel's extended info to distinguish between panel varients that
+- * require different firmware.
+- */
+-static int fts_identify_panel(struct fts_ts_info *info)
+-{
+-	/* Formatting of EXTINFO rows provided in the device trees */
+-	const int EXTINFO_ROW_ELEMS = 5;
+-	const int EXTINFO_ROW_SIZE = EXTINFO_ROW_ELEMS * sizeof(u32);
+-
+-	struct device_node *np = info->dev->of_node;
+-	u32 panel_index = info->board->initial_panel_index;
+-	int extinfo_rows;
+-	u32 filter_panel_index, filter_extinfo_index, filter_extinfo_mask;
+-	u32 filter_extinfo_value, filter_extinfo_fw;
+-	const char *name;
+-	u32 inverted;
+-	int i;
+-	int ret = 0;
+-
+-	if (!info->extinfo.is_read) {
+-		/* Extinfo was not read. Attempt one read before aborting */
+-		ret = fts_read_panel_extinfo(info, 0);
+-		if (ret < 0) {
+-			pr_err("%s: fts_read_panel_extinfo failed with ret=%d.\n",
+-			       __func__, ret);
+-			return ret;
+-		}
+-	}
+-
+-	/* Read the extinfo override table to determine if there are is any
+-	 * reason to select a different firmware for the panel.
+-	 */
+-	if (of_property_read_bool(np, "st,extinfo_override_table")) {
+-		extinfo_rows = of_property_count_elems_of_size(
+-					np, "st,extinfo_override_table",
+-					EXTINFO_ROW_SIZE);
+-
+-		for (i = 0; i < extinfo_rows; i++) {
+-			of_property_read_u32_index(
+-					np, "st,extinfo_override_table",
+-					i * EXTINFO_ROW_ELEMS + 0,
+-					&filter_panel_index);
+-
+-			of_property_read_u32_index(
+-					np, "st,extinfo_override_table",
+-					i * EXTINFO_ROW_ELEMS + 1,
+-					&filter_extinfo_index);
+-
+-			of_property_read_u32_index(
+-					np, "st,extinfo_override_table",
+-					i * EXTINFO_ROW_ELEMS + 2,
+-					&filter_extinfo_mask);
+-
+-			of_property_read_u32_index(
+-					np, "st,extinfo_override_table",
+-					i * EXTINFO_ROW_ELEMS + 3,
+-					&filter_extinfo_value);
+-
+-			of_property_read_u32_index(
+-					np, "st,extinfo_override_table",
+-					i * EXTINFO_ROW_ELEMS + 4,
+-					&filter_extinfo_fw);
+-
+-			if (panel_index != filter_panel_index)
+-				continue;
+-			else if (filter_extinfo_index >= info->extinfo.size) {
+-				pr_err("%s: extinfo index is out of bounds (%d >= %d) in row %d of extinfo_override_table.\n",
+-				       __func__, filter_extinfo_index,
+-				       info->extinfo.size, i);
+-				continue;
+-			} else if ((info->extinfo.data[filter_extinfo_index] &
+-				      filter_extinfo_mask) ==
+-				   filter_extinfo_value) {
+-				/* Override the panel_index as specified in the
+-				 * override table.
+-				 */
+-				panel_index = filter_extinfo_fw;
+-				pr_info("%s: Overriding with row=%d, panel_index=%d.\n",
+-					 __func__, i, panel_index);
+-				break;
+-			}
+-		}
+-	} else {
+-		pr_err("%s: of_property_read_bool(np, \"st,extinfo_override_table\") failed.\n",
+-		       __func__);
+-	}
+-
+-	//---------------------------------------------------------------------
+-	// Read firmware name, limits file name, and sensor inversion based on
+-	// the final panel index. In order to handle the case where the DRM
+-	// panel was not detected from the list in the device tree, fall back to
+-	// using predefined FW and limits paths hardcoded into the driver.
+-	// --------------------------------------------------------------------
+-	name = NULL;
+-	if (info->board->panel)
+-		of_property_read_string_index(np, "st,firmware_names",
+-					      panel_index, &name);
+-	if (!name)
+-		info->board->fw_name = PATH_FILE_FW;
+-	else
+-		info->board->fw_name = name;
+-	pr_info("firmware name = %s\n", info->board->fw_name);
+-
+-	name = NULL;
+-	if (info->board->panel)
+-		of_property_read_string_index(np, "st,limits_names",
+-					      panel_index, &name);
+-	if (!name)
+-		info->board->limits_name = LIMITS_FILE;
+-	else
+-		info->board->limits_name = name;
+-	pr_info("limits name = %s\n", info->board->limits_name);
+-
+-	inverted = 0;
+-	if (info->board->panel)
+-		of_property_read_u32_index(np, "st,sensor_inverted",
+-					   panel_index, &inverted);
+-	info->board->sensor_inverted = (inverted != 0);
+-	pr_info("Sensor inverted = %u\n", inverted);
+-
+-	return 0;
+-}
+-
+ /**
+   *	Implement the fw update and initialization flow of the IC that should
+   *	be executed at every boot up. The function perform a fw update of the
+@@ -5426,8 +5195,6 @@ static int fts_set_gpio(struct fts_ts_info *info)
+ static int parse_dt(struct device *dev, struct fts_hw_platform_data *bdata)
+ {
+ 	int retval;
+-	int index;
+-	struct of_phandle_args panelmap;
+ 	struct drm_panel *panel = NULL;
+ 	struct display_timing timing;
+ 	const char *name;
+@@ -6069,6 +5836,8 @@ static struct i2c_driver fts_i2c_driver = {
+ 	.remove			= fts_remove,
+ 	.id_table		= fts_device_id,
+ };
++
++module_i2c_driver(fts_i2c_driver);
+ #else
+ static struct spi_driver fts_spi_driver = {
+ 	.driver			= {
+@@ -6082,34 +5851,35 @@ static struct spi_driver fts_spi_driver = {
+ 	.probe			= fts_probe,
+ 	.remove			= fts_remove,
+ };
++module_spi_driver(fts_spi_driver);
+ #endif
+ 
+ 
+ 
+ 
+-static int __init fts_driver_init(void)
+-{
+-#ifdef CONFIG_TOUCHSCREEN_STM_FTS_DOWNSTREAM_I2C
+-	return i2c_add_driver(&fts_i2c_driver);
+-#else
+-	return spi_register_driver(&fts_spi_driver);
+-#endif
+-}
++// static int __init fts_driver_init(void)
++// {
++// #ifdef CONFIG_TOUCHSCREEN_STM_FTS_DOWNSTREAM_I2C
++// 	return i2c_add_driver(&fts_i2c_driver);
++// #else
++// 	return spi_register_driver(&fts_spi_driver);
++// #endif
++// }
+ 
+-static void __exit fts_driver_exit(void)
+-{
+-	pr_info("%s\n", __func__);
+-#ifdef CONFIG_TOUCHSCREEN_STM_FTS_DOWNSTREAM_I2C
+-	i2c_del_driver(&fts_i2c_driver);
+-#else
+-	spi_unregister_driver(&fts_spi_driver);
+-#endif
+-}
++// static void __exit fts_driver_exit(void)
++// {
++// 	pr_info("%s\n", __func__);
++// #ifdef CONFIG_TOUCHSCREEN_STM_FTS_DOWNSTREAM_I2C
++// 	i2c_del_driver(&fts_i2c_driver);
++// #else
++// 	spi_unregister_driver(&fts_spi_driver);
++// #endif
++// }
+ 
+ 
+ MODULE_DESCRIPTION("STMicroelectronics MultiTouch IC Driver");
+ MODULE_AUTHOR("STMicroelectronics");
+ MODULE_LICENSE("GPL");
+ 
+-late_initcall(fts_driver_init);
+-module_exit(fts_driver_exit);
++// late_initcall(fts_driver_init);
++// module_exit(fts_driver_exit);
+diff --git a/drivers/input/touchscreen/fts_touch/fts.h b/drivers/input/touchscreen/fts_touch/fts.h
+index 54ef26e35db8..4459782f380c 100644
+--- a/drivers/input/touchscreen/fts_touch/fts.h
++++ b/drivers/input/touchscreen/fts_touch/fts.h
+@@ -508,4 +508,8 @@ extern int fts_proc_remove(void);
+ /* Bus reference tracking */
+ int fts_set_bus_ref(struct fts_ts_info *info, u16 ref, bool enable);
+ 
++void release_all_touches(struct fts_ts_info *info);
++int check_feature_feasibility(struct fts_ts_info *info, unsigned int feature);
++void fts_input_report_key(struct fts_ts_info *info, int key_code);
++
+ #endif
+diff --git a/drivers/input/touchscreen/fts_touch/fts_lib/ftsCompensation.c b/drivers/input/touchscreen/fts_touch/fts_lib/ftsCompensation.c
+index c3269dbcab62..34a3e1123aea 100644
+--- a/drivers/input/touchscreen/fts_touch/fts_lib/ftsCompensation.c
++++ b/drivers/input/touchscreen/fts_touch/fts_lib/ftsCompensation.c
+@@ -313,48 +313,55 @@ static int readSelfSenseGlobalData(u64 *address, SelfSenseData *global)
+ static int readSelfSenseNodeData(u64 address, SelfSenseData *node)
+ {
+ 	int size = node->header.force_node * 2 + node->header.sense_node * 2;
+-	u8 data[size];
++	u8 *data;
+ 	int ret;
+ 
+-	node->ix2_fm = (u8 *)kmalloc(node->header.force_node * (sizeof(u8)),
+-				     GFP_KERNEL);
+-	if (node->ix2_fm == NULL) {
++	data = kmalloc(size * sizeof(u8), GFP_KERNEL);
++	if (!data) {
++		pr_err("%s: cannot allocate memory for data buffer... ERROR %08X\n",
++			__func__, ERROR_ALLOC);
++		return ERROR_ALLOC;
++	}
++
++	node->ix2_fm = kmalloc(node->header.force_node * sizeof(u8), GFP_KERNEL);
++	if (!node->ix2_fm) {
+ 		pr_err("%s: can not allocate memory for ix2_fm... ERROR %08X",
+ 			__func__, ERROR_ALLOC);
++		kfree(data);
+ 		return ERROR_ALLOC;
+ 	}
+ 
+-	node->cx2_fm = (i8 *)kmalloc(node->header.force_node * (sizeof(i8)),
+-				     GFP_KERNEL);
+-	if (node->cx2_fm == NULL) {
++	node->cx2_fm = kmalloc(node->header.force_node * sizeof(i8), GFP_KERNEL);
++	if (!node->cx2_fm) {
+ 		pr_err("%s: can not allocate memory for cx2_fm ... ERROR %08X",
+ 			__func__, ERROR_ALLOC);
++		kfree(data);
+ 		kfree(node->ix2_fm);
+ 		return ERROR_ALLOC;
+ 	}
+-	node->ix2_sn = (u8 *)kmalloc(node->header.sense_node * (sizeof(u8)),
+-				     GFP_KERNEL);
+-	if (node->ix2_sn == NULL) {
++
++	node->ix2_sn = kmalloc(node->header.sense_node * sizeof(u8), GFP_KERNEL);
++	if (!node->ix2_sn) {
+ 		pr_err("%s: can not allocate memory for ix2_sn ERROR %08X",
+ 			__func__, ERROR_ALLOC);
++		kfree(data);
+ 		kfree(node->ix2_fm);
+ 		kfree(node->cx2_fm);
+ 		return ERROR_ALLOC;
+ 	}
+-	node->cx2_sn = (i8 *)kmalloc(node->header.sense_node * (sizeof(i8)),
+-				     GFP_KERNEL);
+-	if (node->cx2_sn == NULL) {
++
++	node->cx2_sn = kmalloc(node->header.sense_node * sizeof(i8), GFP_KERNEL);
++	if (!node->cx2_sn) {
+ 		pr_err("%s: can not allocate memory for cx2_sn ERROR %08X",
+ 			__func__, ERROR_ALLOC);
++		kfree(data);
+ 		kfree(node->ix2_fm);
+ 		kfree(node->cx2_fm);
+ 		kfree(node->ix2_sn);
+ 		return ERROR_ALLOC;
+ 	}
+ 
+-
+ 	pr_info("Address for Node data = %llx\n", address);
+-
+ 	pr_info("Node Data to read %d bytes\n", size);
+ 
+ 	ret = fts_writeReadU8UX(FTS_CMD_FRAMEBUFFER_R, BITS_16, address, data,
+@@ -362,6 +369,7 @@ static int readSelfSenseNodeData(u64 address, SelfSenseData *node)
+ 	if (ret < OK) {
+ 		pr_err("%s: error while reading data... ERROR %08X\n",
+ 			__func__, ret);
++		kfree(data);
+ 		kfree(node->ix2_fm);
+ 		kfree(node->cx2_fm);
+ 		kfree(node->ix2_sn);
+@@ -381,6 +389,7 @@ static int readSelfSenseNodeData(u64 address, SelfSenseData *node)
+ 				   node->header.sense_node],
+ 	       node->header.sense_node);
+ 
++	kfree(data);
+ 	return OK;
+ }
+ 
+@@ -489,18 +498,25 @@ static int readTotMutualSenseNodeData(u64 address, TotMutualSenseData *node)
+ 	int ret, i;
+ 	int size = node->header.force_node * node->header.sense_node;
+ 	int toRead = size * sizeof(u16);
+-	u8 data[toRead];
++	u8 *data;
+ 
+ 	pr_info("Address for Node data = %llx\n", address);
+ 
+-	node->node_data = (short *)kmalloc(size * (sizeof(short)), GFP_KERNEL);
+-
++	node->node_data = kmalloc(size * sizeof(short), GFP_KERNEL);
+ 	if (node->node_data == NULL) {
+ 		pr_err("%s: can not allocate node_data... ERROR %08X",
+ 			__func__, ERROR_ALLOC);
+ 		return ERROR_ALLOC;
+ 	}
+ 
++	data = kmalloc(toRead * sizeof(u8), GFP_KERNEL);
++	if (!data) {
++		pr_err("%s: can not allocate temporary data buffer... ERROR %08X",
++			__func__, ERROR_ALLOC);
++		kfree(node->node_data);
++		return ERROR_ALLOC;
++	}
++
+ 	pr_info("Node Data to read %d bytes\n", size);
+ 
+ 	ret = fts_writeReadU8UX(FTS_CMD_FRAMEBUFFER_R, BITS_16, address, data,
+@@ -509,16 +525,18 @@ static int readTotMutualSenseNodeData(u64 address, TotMutualSenseData *node)
+ 		pr_err("%s: error while reading node data ERROR %08X\n",
+ 			__func__, ret);
+ 		kfree(node->node_data);
++		kfree(data);
+ 		return ret;
+ 	}
++
+ 	node->node_data_size = size;
+ 
+ 	for (i = 0; i < size; i++)
+-		node->node_data[i] = ((short)data[i * 2 + 1]) << 8 |
+-				      data[i * 2];
++		node->node_data[i] = ((short)data[i * 2 + 1] << 8) | data[i * 2];
+ 
+ 	pr_info("Read node data OK!\n");
+ 
++	kfree(data);
+ 	return size;
+ }
+ 
+@@ -586,30 +604,37 @@ int readTotMutualSenseCompensationData(u8 type, TotMutualSenseData *data)
+ static int readTotSelfSenseGlobalData(u64 *address, TotSelfSenseData *global)
+ {
+ 	int ret;
+-	u8 data[COMP_DATA_GLOBAL];
++	u8 *data;
++
++	data = kmalloc(COMP_DATA_GLOBAL * sizeof(u8), GFP_KERNEL);
++	if (!data) {
++		pr_err("%s: can't allocate data buffer... ERROR %08X\n",
++			__func__, ERROR_ALLOC);
++		return ERROR_ALLOC;
++	}
+ 
+ 	pr_info("Address for Global data= %llx\n", *address);
++
+ 	ret = fts_writeReadU8UX(FTS_CMD_FRAMEBUFFER_R, BITS_16, *address, data,
+ 				COMP_DATA_GLOBAL, DUMMY_FRAMEBUFFER);
+ 	if (ret < OK) {
+ 		pr_err("%s: error while reading the data... ERROR %08X\n",
+ 			__func__, ret);
++		kfree(data);
+ 		return ret;
+ 	}
+ 
+ 	pr_info("Global data Read !\n");
+ 
+-
+ 	global->header.force_node = data[0];
+ 	global->header.sense_node = data[1];
+ 
+-
+ 	pr_info("force_len = %d sense_len = %d\n",
+ 		global->header.force_node, global->header.sense_node);
+ 
+-
+ 	*address += COMP_DATA_GLOBAL;
+ 
++	kfree(data);
+ 	return OK;
+ }
+ 
+@@ -625,40 +650,49 @@ static int readTotSelfSenseGlobalData(u64 *address, TotSelfSenseData *global)
+ static int readTotSelfSenseNodeData(u64 address, TotSelfSenseData *node)
+ {
+ 	int size = node->header.force_node * 2 + node->header.sense_node * 2;
+-	int toRead = size * 2;	/* *2 2 bytes each node */
+-	u8 data[toRead];
++	int toRead = size * 2;	/* *2: 2 bytes por nodo */
++	u8 *data;
+ 	int ret, i, j = 0;
+ 
+-	node->ix_fm = (u16 *)kmalloc(node->header.force_node * (sizeof(u16)),
+-				     GFP_KERNEL);
+-	if (node->ix_fm == NULL) {
++	data = kmalloc(toRead * sizeof(u8), GFP_KERNEL);
++	if (!data) {
++		pr_err("%s: cannot allocate memory for temp data buffer... ERROR %08X",
++			__func__, ERROR_ALLOC);
++		return ERROR_ALLOC;
++	}
++
++	node->ix_fm = kmalloc(node->header.force_node * sizeof(u16), GFP_KERNEL);
++	if (!node->ix_fm) {
+ 		pr_err("%s: can not allocate memory for ix2_fm... ERROR %08X",
+ 			__func__, ERROR_ALLOC);
++		kfree(data);
+ 		return ERROR_ALLOC;
+ 	}
+ 
+-	node->cx_fm = (short *)kmalloc(node->header.force_node *
+-				       (sizeof(short)), GFP_KERNEL);
+-	if (node->cx_fm == NULL) {
++	node->cx_fm = kmalloc(node->header.force_node * sizeof(short), GFP_KERNEL);
++	if (!node->cx_fm) {
+ 		pr_err("%s: can not allocate memory for cx2_fm ... ERROR %08X",
+ 			__func__, ERROR_ALLOC);
++		kfree(data);
+ 		kfree(node->ix_fm);
+ 		return ERROR_ALLOC;
+ 	}
+-	node->ix_sn = (u16 *)kmalloc(node->header.sense_node * (sizeof(u16)),
+-				     GFP_KERNEL);
+-	if (node->ix_sn == NULL) {
++
++	node->ix_sn = kmalloc(node->header.sense_node * sizeof(u16), GFP_KERNEL);
++	if (!node->ix_sn) {
+ 		pr_err("%s: can not allocate memory for ix2_sn ERROR %08X",
+ 			__func__, ERROR_ALLOC);
++		kfree(data);
+ 		kfree(node->ix_fm);
+ 		kfree(node->cx_fm);
+ 		return ERROR_ALLOC;
+ 	}
+-	node->cx_sn = (short *)kmalloc(node->header.sense_node *
+-				       (sizeof(short)), GFP_KERNEL);
+-	if (node->cx_sn == NULL) {
++
++	node->cx_sn = kmalloc(node->header.sense_node * sizeof(short), GFP_KERNEL);
++	if (!node->cx_sn) {
+ 		pr_err("%s: can not allocate memory for cx2_sn ERROR %08X",
+ 			__func__, ERROR_ALLOC);
++		kfree(data);
+ 		kfree(node->ix_fm);
+ 		kfree(node->cx_fm);
+ 		kfree(node->ix_sn);
+@@ -675,6 +709,7 @@ static int readTotSelfSenseNodeData(u64 address, TotSelfSenseData *node)
+ 	if (ret < OK) {
+ 		pr_err("%s: error while reading data... ERROR %08X\n",
+ 			__func__, ret);
++		kfree(data);
+ 		kfree(node->ix_fm);
+ 		kfree(node->cx_fm);
+ 		kfree(node->ix_sn);
+@@ -709,9 +744,11 @@ static int readTotSelfSenseNodeData(u64 address, TotSelfSenseData *node)
+ 		pr_err("%s: parsed a wrong number of bytes %d!=%d\n",
+ 			__func__, j, toRead);
+ 
++	kfree(data);
+ 	return OK;
+ }
+ 
++
+ /**
+   * Perform all the steps to read the necessary info for TOT SS Initialization
+   * data from the buffer and store it in a TotSelfSenseData variable
+@@ -785,14 +822,22 @@ static int readSensitivityCoeffHeader(u8 type, DataHeader *msHeader,
+ 			       DataHeader *ssHeader, u64 *address)
+ {
+ 	u64 offset = ADDR_FRAMEBUFFER;
+-	u8 data[SYNCFRAME_DATA_HEADER];
++	u8 *data;
+ 	int ret;
+ 
++	data = kmalloc(SYNCFRAME_DATA_HEADER * sizeof(u8), GFP_KERNEL);
++	if (!data) {
++		pr_err("%s: can't allocate header buffer... ERROR %08X\n",
++			__func__, ERROR_ALLOC);
++		return ERROR_ALLOC;
++	}
++
+ 	ret = fts_writeReadU8UX(FTS_CMD_FRAMEBUFFER_R, BITS_16, offset, data,
+ 				SYNCFRAME_DATA_HEADER, DUMMY_FRAMEBUFFER);
+ 	if (ret < OK) {	/* i2c function have already a retry mechanism */
+ 		pr_err("%s: error while reading data header ERROR %08X\n",
+ 			__func__, ret);
++		kfree(data);
+ 		return ret;
+ 	}
+ 
+@@ -802,13 +847,14 @@ static int readSensitivityCoeffHeader(u8 type, DataHeader *msHeader,
+ 		pr_err("%s: The Header Signature was wrong! %02X != %02X ERROR %08X\n",
+ 			__func__, data[0], HEADER_SIGNATURE,
+ 			ERROR_WRONG_DATA_SIGN);
++		kfree(data);
+ 		return ERROR_WRONG_DATA_SIGN;
+ 	}
+ 
+-
+ 	if (data[1] != type) {
+ 		pr_err("%s: Wrong type found! %02X!=%02X ERROR %08X\n",
+ 			__func__, data[1], type, ERROR_DIFF_DATA_TYPE);
++		kfree(data);
+ 		return ERROR_DIFF_DATA_TYPE;
+ 	}
+ 
+@@ -829,6 +875,7 @@ static int readSensitivityCoeffHeader(u8 type, DataHeader *msHeader,
+ 
+ 	*address = offset + SYNCFRAME_DATA_HEADER;
+ 
++	kfree(data);
+ 	return OK;
+ }
+ 
+@@ -848,27 +895,37 @@ static int readSensitivityCoeffNodeData(u64 address, MutualSenseCoeff *msCoeff,
+ {
+ 	int size = msCoeff->header.force_node * msCoeff->header.sense_node +
+ 		   (ssCoeff->header.force_node + ssCoeff->header.sense_node);
+-	u8 data[size];
++	u8 *data;
+ 	int ret;
+ 
++	data = kmalloc(size * sizeof(u8), GFP_KERNEL);
++	if (!data) {
++		pr_err("%s: cannot allocate temp buffer... ERROR %08X",
++			__func__, ERROR_ALLOC);
++		return ERROR_ALLOC;
++	}
++
+ 	msCoeff->node_data_size = msCoeff->header.force_node *
+ 				  msCoeff->header.sense_node;
+ 
+-	msCoeff->ms_coeff = (u8 *)kmalloc(msCoeff->node_data_size *
+-					  (sizeof(u8)), GFP_KERNEL);
++	msCoeff->ms_coeff = kmalloc(msCoeff->node_data_size * sizeof(u8),
++				     GFP_KERNEL);
++
++	ssCoeff->ss_force_coeff = kmalloc(ssCoeff->header.force_node * sizeof(u8),
++					  GFP_KERNEL);
+ 
+-	ssCoeff->ss_force_coeff = (u8 *)kmalloc(ssCoeff->header.force_node *
+-						(sizeof(u8)), GFP_KERNEL);
++	ssCoeff->ss_sense_coeff = kmalloc(ssCoeff->header.sense_node * sizeof(u8),
++					   GFP_KERNEL);
+ 
+-	ssCoeff->ss_sense_coeff = (u8 *)kmalloc(ssCoeff->header.sense_node *
+-						(sizeof(u8)), GFP_KERNEL);
+-	if (msCoeff->ms_coeff == NULL ||
+-	    ssCoeff->ss_force_coeff == NULL ||
+-	    ssCoeff->ss_sense_coeff == NULL) {
++	if (!msCoeff->ms_coeff ||
++	    !ssCoeff->ss_force_coeff ||
++	    !ssCoeff->ss_sense_coeff) {
+ 
+ 		pr_err("%s: can not allocate memory for coeff ERROR %08X",
+ 			__func__, ERROR_ALLOC);
+ 
++		kfree(data);
++
+ 		kfree(msCoeff->ms_coeff);
+ 		msCoeff->ms_coeff = NULL;
+ 
+@@ -890,6 +947,7 @@ static int readSensitivityCoeffNodeData(u64 address, MutualSenseCoeff *msCoeff,
+ 	if (ret < OK) {
+ 		pr_err("%s: error while reading data... ERROR %08X\n",
+ 			__func__, ret);
++		kfree(data);
+ 		kfree(msCoeff->ms_coeff);
+ 		msCoeff->ms_coeff = NULL;
+ 		kfree(ssCoeff->ss_force_coeff);
+@@ -908,6 +966,7 @@ static int readSensitivityCoeffNodeData(u64 address, MutualSenseCoeff *msCoeff,
+ 					      ssCoeff->header.force_node],
+ 	       ssCoeff->header.sense_node);
+ 
++	kfree(data);
+ 	return OK;
+ }
+ 
+diff --git a/drivers/input/touchscreen/fts_touch/fts_lib/ftsCore.c b/drivers/input/touchscreen/fts_touch/fts_lib/ftsCore.c
+index b8d0af12124d..513cc20060d9 100644
+--- a/drivers/input/touchscreen/fts_touch/fts_lib/ftsCore.c
++++ b/drivers/input/touchscreen/fts_touch/fts_lib/ftsCore.c
+@@ -399,29 +399,48 @@ int setScanMode(u8 mode, u8 settings)
+   */
+ int setFeatures(u8 feat, u8 *settings, int size)
+ {
+-	u8 cmd[2 + size];
++	u8 *cmd;
++	char *buff;
+ 	int i = 0;
+ 	int ret;
+-	char buff[(2 + 1) * size + 1];
+-	int buff_len = sizeof(buff);
++	int cmd_len = 2 + size;
++	int buff_len = (2 + 1) * size + 1;
+ 	int index = 0;
+ 
++	cmd = kmalloc(cmd_len * sizeof(u8), GFP_KERNEL);
++	buff = kmalloc(buff_len * sizeof(char), GFP_KERNEL);
++
++	if (!cmd || !buff) {
++		pr_err("%s: failed to allocate buffers... ERROR %08X\n",
++			__func__, ERROR_ALLOC);
++		kfree(cmd);
++		kfree(buff);
++		return ERROR_ALLOC;
++	}
++
+ 	pr_info("%s: Setting feature: feat = %02X !\n", __func__, feat);
+ 	cmd[0] = FTS_CMD_FEATURE;
+ 	cmd[1] = feat;
+ 	for (i = 0; i < size; i++) {
+ 		cmd[2 + i] = settings[i];
+ 		index += scnprintf(buff + index, buff_len - index,
+-					"%02X ", settings[i]);
++				   "%02X ", settings[i]);
+ 	}
++
+ 	pr_info("%s: Settings = %s\n", __func__, buff);
+-	ret = fts_write(cmd, 2 + size);
+-	/* use write instead of writeFw because can be called while the
+-	 * interrupts are enabled */
++
++	ret = fts_write(cmd, cmd_len);
+ 	if (ret < OK) {
+ 		pr_err("%s: write failed...ERROR %08X !\n", __func__, ret);
+-		return ret | ERROR_SET_FEATURE_FAIL;
++		ret |= ERROR_SET_FEATURE_FAIL;
+ 	}
++
++	kfree(cmd);
++	kfree(buff);
++
++	if (ret < OK)
++		return ret;
++
+ 	pr_info("%s: Setting feature OK!\n", __func__);
+ 	return OK;
+ }
+@@ -442,39 +461,55 @@ int setFeatures(u8 feat, u8 *settings, int size)
+   */
+ int writeSysCmd(u8 sys_cmd, u8 *sett, int size)
+ {
+-	u8 cmd[2 + size];
++	u8 *cmd;
++	char *buff;
+ 	int ret;
+-	char buff[(2 + 1) * size + 1];
+-	int buff_len = sizeof(buff);
++	int cmd_len = 2 + size;
++	int buff_len = (2 + 1) * size + 1;
+ 	int index = 0;
+ 
++	cmd = kmalloc(cmd_len * sizeof(u8), GFP_KERNEL);
++	buff = kmalloc(buff_len * sizeof(char), GFP_KERNEL);
++
++	if (!cmd || !buff) {
++		pr_err("%s: failed to allocate buffers... ERROR %08X\n",
++		       __func__, ERROR_ALLOC);
++		kfree(cmd);
++		kfree(buff);
++		return ERROR_ALLOC;
++	}
++
+ 	cmd[0] = FTS_CMD_SYSTEM;
+ 	cmd[1] = sys_cmd;
+ 
+ 	for (ret = 0; ret < size; ret++) {
+ 		cmd[2 + ret] = sett[ret];
+ 		index += scnprintf(buff + index, buff_len - index,
+-					"%02X ", sett[ret]);
++				   "%02X ", sett[ret]);
+ 	}
+-	pr_info("%s: Command = %02X %02X %s\n", __func__, cmd[0],
+-		 cmd[1], buff);
++
++	pr_info("%s: Command = %02X %02X %s\n", __func__, cmd[0], cmd[1], buff);
+ 	pr_info("%s: Writing Sys command...\n", __func__);
+-	if (sys_cmd != SYS_CMD_LOAD_DATA)
+-		ret = fts_writeFwCmd(cmd, 2 + size);
+-	else {
+-		if (size >= 1)
++
++	if (sys_cmd != SYS_CMD_LOAD_DATA) {
++		ret = fts_writeFwCmd(cmd, cmd_len);
++	} else {
++		if (size >= 1) {
+ 			ret = requestSyncFrame(sett[0]);
+-		else {
++		} else {
+ 			pr_err("%s: No setting argument! ERROR %08X\n",
+-				__func__, ERROR_OP_NOT_ALLOW);
+-			return ERROR_OP_NOT_ALLOW;
++			       __func__, ERROR_OP_NOT_ALLOW);
++			ret = ERROR_OP_NOT_ALLOW;
+ 		}
+ 	}
++	
+ 	if (ret < OK)
+ 		pr_err("%s: ERROR %08X\n", __func__, ret);
+ 	else
+ 		pr_info("%s: FINISHED!\n", __func__);
+ 
++	kfree(cmd);
++	kfree(buff);
+ 	return ret;
+ }
+ /** @}*/
+@@ -1118,10 +1153,18 @@ int writeHostDataMemory(u8 type, u8 *data, u8 msForceLen, u8 msSenseLen,
+ {
+ 	int res;
+ 	int size = (msForceLen * msSenseLen) + (ssForceLen + ssSenseLen);
++	int total_size = size + SYNCFRAME_DATA_HEADER;
+ 	u8 sett = SPECIAL_WRITE_HOST_MEM_TO_FLASH;
+-	u8 temp[size + SYNCFRAME_DATA_HEADER];
++	u8 *temp;
+ 
+-	memset(temp, 0, size + SYNCFRAME_DATA_HEADER);
++	temp = kmalloc(total_size * sizeof(u8), GFP_KERNEL);
++	if (!temp) {
++		pr_err("%s: failed to allocate memory for temp buffer... ERROR %08X\n",
++			__func__, ERROR_ALLOC);
++		return ERROR_ALLOC;
++	}
++
++	memset(temp, 0, total_size);
+ 	pr_info("%s: Starting to write Host Data Memory\n", __func__);
+ 
+ 	temp[0] = 0x5A;
+@@ -1135,8 +1178,9 @@ int writeHostDataMemory(u8 type, u8 *data, u8 msForceLen, u8 msSenseLen,
+ 
+ 	pr_info("%s: Write Host Data Memory in buffer...\n", __func__);
+ 	res = fts_writeU8UX(FTS_CMD_FRAMEBUFFER_W, BITS_16,
+-			    ADDR_FRAMEBUFFER, temp, size +
+-			    SYNCFRAME_DATA_HEADER);
++			    ADDR_FRAMEBUFFER, temp, total_size);
++
++	kfree(temp);
+ 
+ 	if (res < OK) {
+ 		pr_err("%s: error while writing the buffer! ERROR %08X\n",
+diff --git a/drivers/input/touchscreen/fts_touch/fts_lib/ftsFrame.c b/drivers/input/touchscreen/fts_touch/fts_lib/ftsFrame.c
+index a2b23ee99ca1..a46b9a6c59fe 100644
+--- a/drivers/input/touchscreen/fts_touch/fts_lib/ftsFrame.c
++++ b/drivers/input/touchscreen/fts_touch/fts_lib/ftsFrame.c
+@@ -57,11 +57,6 @@ int getChannelsLength(void)
+ 	int ret;
+ 	u8 data[2];
+ 
+-	if (data == NULL) {
+-		pr_err("getChannelsLength: ERROR %08X\n", ERROR_ALLOC);
+-		return ERROR_ALLOC;
+-	}
+-
+ 	ret = readConfig(ADDR_CONFIG_SENSE_LEN, data, 2);
+ 	if (ret < OK) {
+ 		pr_err("getChannelsLength: ERROR %08X\n", ret);
+@@ -93,11 +88,6 @@ int getFrameData(u16 address, int size, short *frame)
+ 	int i, j, ret;
+ 	u8 *data = (u8 *)kmalloc(size * sizeof(u8), GFP_KERNEL);
+ 
+-	if (data == NULL) {
+-		pr_err("getFrameData: ERROR %08X\n", ERROR_ALLOC);
+-		return ERROR_ALLOC;
+-	}
+-
+ 	ret = fts_writeReadU8UX(FTS_CMD_FRAMEBUFFER_R, BITS_16, address, data,
+ 				size, DUMMY_FRAMEBUFFER);
+ 	if (ret < OK) {
+diff --git a/drivers/input/touchscreen/fts_touch/fts_lib/ftsTest.c b/drivers/input/touchscreen/fts_touch/fts_lib/ftsTest.c
+index e9fb958dfe46..c94683b37931 100644
+--- a/drivers/input/touchscreen/fts_touch/fts_lib/ftsTest.c
++++ b/drivers/input/touchscreen/fts_touch/fts_lib/ftsTest.c
+@@ -597,7 +597,7 @@ int checkLimitsMinMax(short *data, int row, int column, int min, int max)
+ 		for (j = 0; j < column; j++) {
+ 			if (data[i * column + j] < min || data[i * column + j] >
+ 			    max) {
+-				pr_debug("%s: Node[%d,%d] = %d exceed limit [%d, %d]\n",
++				pr_debug("checkLimitsMinMax: Node[%d,%d] = %d exceed limit [%d, %d]\n",
+ 					i, j, data[i * column + j], min, max);
+ 				count++;
+ 			}
+@@ -723,7 +723,7 @@ int checkLimitsMap(i8 *data, int row, int column, int *min, int *max)
+ 		for (j = 0; j < column; j++) {
+ 			if (data[i * column + j] < min[i * column + j] ||
+ 			    data[i * column + j] > max[i * column + j]) {
+-				pr_debug("%s: Node[%d,%d] = %d exceed limit [%d, %d]\n",
++				pr_debug("checkLimitsMap: Node[%d,%d] = %d exceed limit [%d, %d]\n",
+ 					i, j, data[i * column + j],
+ 					min[i * column + j],
+ 					max[i * column + j]);
+@@ -758,7 +758,7 @@ int checkLimitsMapTotal(short *data, int row, int column, int *min, int *max)
+ 		for (j = 0; j < column; j++) {
+ 			if (data[i * column + j] < min[i * column + j] ||
+ 			    data[i * column + j] > max[i * column + j]) {
+-				pr_debug("%s: Node[%d,%d] = %d exceed limit [%d, %d]\n",
++				pr_debug("checkLimitsMapTotal: Node[%d,%d] = %d exceed limit [%d, %d]\n",
+ 					i, j, data[i * column + j],
+ 					min[i * column + j],
+ 					max[i * column + j]);
+@@ -793,7 +793,7 @@ int checkLimitsMapFromU(u8 *data, int row, int column, int *min, int *max)
+ 		for (j = 0; j < column; j++) {
+ 			if (data[i * column + j] < min[i * column + j] ||
+ 			    data[i * column + j] > max[i * column + j]) {
+-				pr_debug("%s: Node[%d,%d] = %d exceed limit [%d, %d]\n",
++				pr_debug("checkLimitsMapFromU: Node[%d,%d] = %d exceed limit [%d, %d]\n",
+ 					i, j, data[i * column + j],
+ 					min[i * column + j],
+ 					max[i * column + j]);
+@@ -828,7 +828,7 @@ int checkLimitsMapTotalFromU(u16 *data, int row, int column, int *min, int *max)
+ 		for (j = 0; j < column; j++) {
+ 			if (data[i * column + j] < min[i * column + j] ||
+ 			    data[i * column + j] > max[i * column + j]) {
+-				pr_debug("%s: Node[%d,%d] = %d exceed limit [%d, %d]\n",
++				pr_debug("checkLimitsMapTotalFromU: Node[%d,%d] = %d exceed limit [%d, %d]\n",
+ 					i, j, data[i * column + j],
+ 					min[i * column + j],
+ 					max[i * column + j]);
+@@ -860,7 +860,7 @@ int checkLimitsMapAdj(u8 *data, int row, int column, int *max)
+ 	for (i = 0; i < row; i++) {
+ 		for (j = 0; j < column; j++) {
+ 			if (data[i * column + j] > max[i * column + j]) {
+-				pr_debug("%s: Node[%d,%d] = %d exceed limit > %d\n",
++				pr_debug("checkLimitsMapAdj: Node[%d,%d] = %d exceed limit > %d\n",
+ 					i, j,
+ 					data[i * column + j],
+ 					max[i * column + j]);
+@@ -892,7 +892,7 @@ int checkLimitsMapAdjTotal(u16 *data, int row, int column, int *max)
+ 	for (i = 0; i < row; i++) {
+ 		for (j = 0; j < column; j++) {
+ 			if (data[i * column + j] > max[i * column + j]) {
+-				pr_debug("%s: Node[%d,%d] = %d exceed limit > %d\n",
++				pr_debug("checkLimitsMapAdjTotal: Node[%d,%d] = %d exceed limit > %d\n",
+ 					i, j,
+ 					data[i * column + j],
+ 					max[i * column + j]);
+@@ -1443,7 +1443,7 @@ int production_test_ms_raw(const char *path_limits, int stop_on_fail,
+ 				if (ret != OK) {
+ 					pr_err("production_test_data: checkLimitsAdj MS RAW ADJH failed... ERROR COUNT = %d\n",
+ 						ret);
+-					pr_err("%s MS RAW ADJ HORIZONTAL MIN/MAX:.................FAIL\n\n");
++					pr_err("MS RAW ADJ HORIZONTAL MIN/MAX:.................FAIL\n\n");
+ 					count_fail += 1;
+ 					if (stop_on_fail == 1)
+ 						goto ERROR;
+@@ -2532,7 +2532,7 @@ int production_test_ms_cx(const char *path_limits, int stop_on_fail,
+ 			return ret;
+ 		}
+ 	} else
+-		pr_info("%s MS CX LP TEST:.................SKIPPED\n");
++		pr_info("MS CX LP TEST:.................SKIPPED\n");
+ 
+ 	if ((todo->MutualKeyCx1 | todo->MutualKeyCx2 |
+ 	     todo->MutualKeyCxTotal) == 1) {
+@@ -2938,7 +2938,7 @@ int production_test_ms_cx_lp(const char *path_limits, int stop_on_fail,
+ 	kfree(thresholds);
+ 	thresholds = NULL;
+ 
+-	pr_info("%s MS LP CX2 MIN MAX TEST:\n");
++	pr_info("MS LP CX2 MIN MAX TEST:\n");
+ 	if (todo->MutualCx2LP == 1) {
+ 		ret = parseProductionTestLimits(path_limits, &limit_file,
+ 						MS_CX2_LP_MAP_MIN,
+@@ -6780,7 +6780,7 @@ int tp_sensitivity_compute_gains(MutualSenseFrame *frame, short target,
+ {
+ 	int ret = OK;
+ 	int i = 0;
+-	u8 gains[frame->node_data_size];
++	u8 *gains;
+ 
+ 	if ((frame->node_data == NULL) || (frame->node_data_size == 0)) {
+ 		pr_err("%s: Invalid frame data passed as argument! ERROR %08X\n",
+@@ -6788,6 +6788,13 @@ int tp_sensitivity_compute_gains(MutualSenseFrame *frame, short target,
+ 		return ERROR_OP_NOT_ALLOW;
+ 	}
+ 
++	gains = kmalloc(frame->node_data_size * sizeof(u8), GFP_KERNEL);
++	if (!gains) {
++		pr_err("%s: Failed to allocate memory for gains... ERROR %08X\n",
++			__func__, ERROR_ALLOC);
++		return ERROR_ALLOC;
++	}
++
+ 	memset(gains, 0, frame->node_data_size);
+ 
+ 	pr_info("%s: Start to compute Digital Gains...\n", __func__);
+@@ -6826,9 +6833,11 @@ int tp_sensitivity_compute_gains(MutualSenseFrame *frame, short target,
+ 		ret = OK;
+ 	}
+ 
++	kfree(gains);
+ 	return ret;
+ }
+ 
++
+ /**
+   * Perform the Post Calibration MS Test when the stimpad is down
+   * @param[out] finalFrame pointer to the frame which will contain
+-- 
+2.51.1
+

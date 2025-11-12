@@ -1,0 +1,26 @@
+From d2e9db6116af488617bdb6ba4c7ed5cd60ee588e Mon Sep 17 00:00:00 2001
+From: Nicola Guerrera <guerrera.nicola@gmail.com>
+Date: Tue, 5 Aug 2025 15:33:13 +0200
+Subject: [PATCH 43/77] power: supply: qcom_smbx: remove unsupported
+ __counted_by attribute
+
+---
+ drivers/power/supply/qcom_smbx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/power/supply/qcom_smbx.c b/drivers/power/supply/qcom_smbx.c
+index c10e5daa99da..2b5d20bac290 100644
+--- a/drivers/power/supply/qcom_smbx.c
++++ b/drivers/power/supply/qcom_smbx.c
+@@ -254,7 +254,7 @@ struct smb_match_data {
+ 	const char *name;
+ 	enum smb_generation gen;
+ 	size_t init_seq_len;
+-	const struct smb_init_register __counted_by(init_seq_len) *init_seq;
++	const struct smb_init_register *init_seq;
+ };
+ 
+ static enum power_supply_property smb_properties[] = {
+-- 
+2.51.1
+

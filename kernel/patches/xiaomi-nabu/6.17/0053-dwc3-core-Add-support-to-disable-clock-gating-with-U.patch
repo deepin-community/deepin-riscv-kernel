@@ -1,0 +1,70 @@
+From 1a36118913d85c9280dded5224c54d0c32407791 Mon Sep 17 00:00:00 2001
+From: Andrew Gigena <mail@andrewgigena.dev>
+Date: Thu, 31 Jul 2025 11:51:38 -0300
+Subject: [PATCH 53/77] dwc3: core: Add support to disable clock gating with
+ USB controller
+
+In some cases it is suggested to disable clock gating functionality of
+USB controller. This change adds required support for same.
+
+Signed-off-by: Andrew Gigena <mail@andrewgigena.dev>
+---
+ Documentation/devicetree/bindings/usb/snps,dwc3-common.yaml | 5 +++++
+ drivers/usb/dwc3/core.c                                     | 5 +++++
+ drivers/usb/dwc3/core.h                                     | 1 +
+ 3 files changed, 11 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/usb/snps,dwc3-common.yaml b/Documentation/devicetree/bindings/usb/snps,dwc3-common.yaml
+index b7ed8c0392d5..39314de11c4e 100644
+--- a/Documentation/devicetree/bindings/usb/snps,dwc3-common.yaml
++++ b/Documentation/devicetree/bindings/usb/snps,dwc3-common.yaml
+@@ -239,6 +239,11 @@ properties:
+       U3 exit handshake.
+     type: boolean
+ 
++  snps,disable-clk-gating:
++    description:
++      When set disable controller's internal clock gating. Default it is enabled.
++    type: boolean
++
+   snps,hird-threshold:
+     description: HIRD threshold
+     $ref: /schemas/types.yaml#/definitions/uint8
+diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
+index ba30ad0fb62e..ed9380a005bd 100644
+--- a/drivers/usb/dwc3/core.c
++++ b/drivers/usb/dwc3/core.c
+@@ -1091,6 +1091,9 @@ static void dwc3_core_setup_global_control(struct dwc3 *dwc)
+ 	if (DWC3_VER_IS_PRIOR(DWC3, 190A))
+ 		reg |= DWC3_GCTL_U2RSTECN;
+ 
++	if (dwc->disable_clk_gating)
++		reg |= DWC3_GCTL_DSBLCLKGTNG;
++
+ 	dwc3_writel(dwc->regs, DWC3_GCTL, reg);
+ }
+ 
+@@ -1836,6 +1839,8 @@ static void dwc3_get_properties(struct dwc3 *dwc)
+ 				"snps,tx_de_emphasis_quirk");
+ 	dwc->ssp_u3_u0_quirk = device_property_read_bool(dev,
+ 				"snps,ssp-u3-u0-quirk");
++	dwc->disable_clk_gating = device_property_read_bool(dev,
++					"snps,disable-clk-gating");
+ 	device_property_read_u8(dev, "snps,tx_de_emphasis",
+ 				&tx_de_emphasis);
+ 	device_property_read_string(dev, "snps,hsphy_interface",
+diff --git a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
+index 8fc8690b02c3..28e246d7f84e 100644
+--- a/drivers/usb/dwc3/core.h
++++ b/drivers/usb/dwc3/core.h
+@@ -1384,6 +1384,7 @@ struct dwc3 {
+ 	unsigned		tx_de_emphasis_quirk:1;
+ 	unsigned		ssp_u3_u0_quirk:1;
+ 	unsigned		tx_de_emphasis:2;
++	unsigned		disable_clk_gating:1;
+ 
+ 	unsigned		dis_metastability_quirk:1;
+ 
+-- 
+2.51.1
+

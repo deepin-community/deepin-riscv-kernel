@@ -1,0 +1,99 @@
+From e6a933799f59204978f02903465b6fc0fdc400de Mon Sep 17 00:00:00 2001
+From: Caleb Connolly <caleb@connolly.tech>
+Date: Fri, 5 Mar 2021 01:40:17 +0000
+Subject: [PATCH 14/77] arm64: dts: sm8150-oneplus-guacamole: add s6sy761 touch
+
+---
+ .../dts/qcom/sm8150-oneplus-guacamole.dts     | 65 ++++++++++---------
+ 1 file changed, 33 insertions(+), 32 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/sm8150-oneplus-guacamole.dts b/arch/arm64/boot/dts/qcom/sm8150-oneplus-guacamole.dts
+index 160f4e11ba48..bf4b540d36aa 100644
+--- a/arch/arm64/boot/dts/qcom/sm8150-oneplus-guacamole.dts
++++ b/arch/arm64/boot/dts/qcom/sm8150-oneplus-guacamole.dts
+@@ -22,48 +22,49 @@ aliases {
+ 
+ 	chosen {
+ 		#address-cells = <2>;
+-        #size-cells = <2>;
+-        ranges;
++		#size-cells = <2>;
++		ranges;
+ 		stdout-path = "display0";
+ 
+ 		/*
+-         * hack: Use framebuffer setup by the bootloader for simplefb.
+-         * the address is taken from the bootloader config (strings xbl.img | grep "Display Reserved")
+-         */
+-        framebuffer0: framebuffer@9C000000 {
+-            compatible = "simple-framebuffer";
+-            reg = <0 0x9C000000 0 (1440 * 3120 * 4)>;
+-            width = <1440>;
+-            height = <3120>;
+-            stride = <(1440 * 4)>;
+-            format = "a8r8g8b8";
+-            status = "okay";
++		 * hack: Use framebuffer setup by the bootloader for simplefb.
++		 * the address is taken from the bootloader config (strings xbl.img | grep "Display Reserved")
++		 */
++		framebuffer0: framebuffer@9C000000 {
++			compatible = "simple-framebuffer";
++			reg = <0 0x9C000000 0 (1440 * 3120 * 4)>;
++			width = <1440>;
++			height = <3120>;
++			stride = <(1440 * 4)>;
++			format = "a8r8g8b8";
++			status = "okay";
+ 
+-        };
++		};
+ 	};
+ 
+ 	reserved-memory {
+ 	// hack: Bootloader framebuffer memory region
+-        fb_mem: memory@a1a10000 {
+-            compatible = "removed-dma-pool";
+-            no-map;
+-            reg = <0 0x9C000000 0 (1440 * 3120 * 4)>;
+-        };
+-
+-		removed_region: removed-region@89d00000 {
+-			reg = <0x0 0x89d00000 0x0 0x1a00000>;
++		fb_mem: memory@a1a10000 {
++			compatible = "removed-dma-pool";
+ 			no-map;
++			reg = <0 0x9C000000 0 (1440 * 3120 * 4)>;
+ 		};
++	};
++};
+ 
+-		ramoops: ramoops@0xA9800000 {
+-			compatible = "ramoops";
+-			reg = <0 0xA9800000 0 0x400000>;
+-			record-size = <0x40000>;
+-			console-size = <0x40000>;
+-			ftrace-size = <0x40000>;
+-			pmsg-size = <0x200000>;
+-			devinfo-size = <0x1000>;
+-			ecc-size = <0x0>;
+-		};
++&i2c17 {
++	status = "okay";
++	clock-frequency = <400000>;
++
++	touchscreen@48 {
++		compatible = "samsung,s6sy761";
++		status = "okay";
++		reg = <0x48>;
++		interrupt-parent = <&tlmm>;
++		interrupts = <122 0x2008>;
++		vdd-supply = <&vreg_l17a_3p0>;
++
++		pinctrl-names = "default";
++		pinctrl-0 = <&tp_irq_active &tp_rst_active &tp_1v8_active>;
+ 	};
+ };
+\ No newline at end of file
+-- 
+2.51.1
+

@@ -1,0 +1,34 @@
+From 83d84cd796973f6da83c074b73af0cb5d65b7937 Mon Sep 17 00:00:00 2001
+From: Jens Reidel <adrian@mainlining.org>
+Date: Thu, 18 Sep 2025 16:02:50 +0200
+Subject: [PATCH 67/77] FROMLIST: MAINTAINERS: add an entry for Goodix GTX8
+ Touchscreen driver
+
+Add MAINTAINERS entry for the Goodix GTX8 Touchscreen IC driver.
+
+Signed-off-by: Jens Reidel <adrian@mainlining.org>
+---
+ MAINTAINERS | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index bd528fd2669f..dfe7806beeec 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -10386,6 +10386,13 @@ M:	Maud Spierings <maudspierings@gocontroll.com>
+ S:	Maintained
+ F:	Documentation/devicetree/bindings/connector/gocontroll,moduline-module-slot.yaml
+ 
++GOODIX GTX8 TOUCHSCREEN
++M:	Jens Reidel <adrian@mainlining.org>
++L:	linux-input@vger.kernel.org
++S:	Maintained
++F:	Documentation/devicetree/bindings/input/touchscreen/goodix,gt9886.yaml
++F:	drivers/input/touchscreen/goodix_gtx8*
++
+ GOODIX TOUCHSCREEN
+ M:	Hans de Goede <hansg@kernel.org>
+ L:	linux-input@vger.kernel.org
+-- 
+2.51.1
+

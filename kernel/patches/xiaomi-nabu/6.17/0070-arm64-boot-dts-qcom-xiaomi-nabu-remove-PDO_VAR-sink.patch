@@ -1,0 +1,28 @@
+From 4aa208933b04f8b08e36d3938aa1424ae9357d84 Mon Sep 17 00:00:00 2001
+From: Nicola Guerrera <guerrera.nicola@gmail.com>
+Date: Mon, 20 Oct 2025 20:47:19 +0200
+Subject: [PATCH 70/77] arm64: boot: dts: qcom: xiaomi-nabu: remove PDO_VAR
+ sink
+
+Currently we have disabeld the fast charger in favour of the built-in PMIC. pm8150b_charger only supports 5v input, disable the variable sink pdo.
+---
+ arch/arm64/boot/dts/qcom/sm8150-xiaomi-nabu.dts | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/sm8150-xiaomi-nabu.dts b/arch/arm64/boot/dts/qcom/sm8150-xiaomi-nabu.dts
+index 25baf7679af1..3a2e7ce9dc16 100644
+--- a/arch/arm64/boot/dts/qcom/sm8150-xiaomi-nabu.dts
++++ b/arch/arm64/boot/dts/qcom/sm8150-xiaomi-nabu.dts
+@@ -684,8 +684,7 @@ PDO_FIXED_USB_COMM |
+ 		sink-pdos = <PDO_FIXED(5000, 3000,
+ 					 PDO_FIXED_DUAL_ROLE |
+ 					 PDO_FIXED_USB_COMM |
+-					 PDO_FIXED_DATA_SWAP)
+-					 PDO_VAR(5000, 12000, 3000)>;
++					 PDO_FIXED_DATA_SWAP)>;
+ 
+ 		op-sink-microwatt = <10000000>;
+ 
+-- 
+2.51.1
+

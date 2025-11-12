@@ -1,0 +1,28 @@
+From 6963e3800a8e8059c5f01b01dd8e2a5e6a28209a Mon Sep 17 00:00:00 2001
+From: Nicola Guerrera <guerrera.nicola@gmail.com>
+Date: Fri, 31 Oct 2025 18:39:06 +0100
+Subject: [PATCH 77/77] power: supply: idtp9418: remove unused variable
+
+---
+ drivers/power/supply/idtp9418.c | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/drivers/power/supply/idtp9418.c b/drivers/power/supply/idtp9418.c
+index 48a62d594ef4..73dbc8292fc3 100644
+--- a/drivers/power/supply/idtp9418.c
++++ b/drivers/power/supply/idtp9418.c
+@@ -544,11 +544,9 @@ static void idtp9418_irq_work(struct work_struct *work)
+ 	u8 int_buf[4] = {0};
+ 	u32 int_val = 0;
+ 	int rc = 0;
+-	int irq_level;
+ 
+ 	if (gpiod_get_value(di->gpios.idt_irq))
+ 	{
+-		dev_info(di->dev, "irq is high level, ignore%d\n", irq_level);
+ 		pm_relax(di->dev);
+ 		return;
+ 	}
+-- 
+2.51.1
+

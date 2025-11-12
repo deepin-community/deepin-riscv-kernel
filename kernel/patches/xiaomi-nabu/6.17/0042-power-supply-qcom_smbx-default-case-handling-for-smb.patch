@@ -1,0 +1,30 @@
+From 774dcf8d7699eff436d1789fff12cd3c2a1baea6 Mon Sep 17 00:00:00 2001
+From: Joel Selvaraj <foss@joelselvaraj.com>
+Date: Sat, 21 Jun 2025 02:57:27 -0500
+Subject: [PATCH 42/77] power: supply: qcom_smbx: default case handling for
+ smb_get_prop_health
+
+Compiler errors without it. Ideally fold this into the main commit.
+
+Signed-off-by: Joel Selvaraj <foss@joelselvaraj.com>
+---
+ drivers/power/supply/qcom_smbx.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/power/supply/qcom_smbx.c b/drivers/power/supply/qcom_smbx.c
+index b723dba5b86d..c10e5daa99da 100644
+--- a/drivers/power/supply/qcom_smbx.c
++++ b/drivers/power/supply/qcom_smbx.c
+@@ -584,6 +584,9 @@ static int smb_get_prop_health(struct smb_chip *chip, int *val)
+ 		return smb2_get_prop_health(chip, val);
+ 	case SMB5:
+ 		return smb5_get_prop_health(chip, val);
++	default:
++		dev_err(chip->dev, "Unsupported SMB chip generation\n");
++		return -EINVAL;
+ 	}
+ }
+ 
+-- 
+2.51.1
+

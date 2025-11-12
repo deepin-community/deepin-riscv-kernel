@@ -1,0 +1,145 @@
+From fbcc52de4e4e183012707a057a03f1a3ee82f5b5 Mon Sep 17 00:00:00 2001
+From: Andrew Gigena <mail@andrewgigena.dev>
+Date: Fri, 8 Aug 2025 03:59:13 -0300
+Subject: [PATCH 61/77] Input: touchscreen: fts_touch: fix firmware loading
+
+---
+ .../boot/dts/qcom/sm8150-google-flame.dts     |  2 +
+ .../touchscreen/fts_touch/fts_lib/ftsFlash.c  | 95 +++++++++----------
+ 2 files changed, 45 insertions(+), 52 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/sm8150-google-flame.dts b/arch/arm64/boot/dts/qcom/sm8150-google-flame.dts
+index 916078cce264..2318a43af2e5 100644
+--- a/arch/arm64/boot/dts/qcom/sm8150-google-flame.dts
++++ b/arch/arm64/boot/dts/qcom/sm8150-google-flame.dts
+@@ -1318,6 +1318,8 @@ touchscreen: touchscreen@0 {
+ 		st,regulator_dvdd = "vdd";
+ 		st,regulator_avdd = "avdd";
+ 		st,max-coords = <1079 2279>;
++
++		firmware-name = "ftm5_fw.ftb";
+ 	};
+ };
+ 
+diff --git a/drivers/input/touchscreen/fts_touch/fts_lib/ftsFlash.c b/drivers/input/touchscreen/fts_touch/fts_lib/ftsFlash.c
+index af3aa437936b..7902bd9cbbec 100644
+--- a/drivers/input/touchscreen/fts_touch/fts_lib/ftsFlash.c
++++ b/drivers/input/touchscreen/fts_touch/fts_lib/ftsFlash.c
+@@ -70,71 +70,62 @@ int getFWdata(const char *pathToFile, u8 **data, int *size)
+ 	const struct firmware *fw = NULL;
+ 	struct device *dev = getDev();
+ 	struct fts_ts_info *info = NULL;
+-	int res, from = 0;
+-	char *path = (char *)pathToFile;
++	const char *fw_name = NULL;
++	int res;
+ 
+-	if (dev != NULL)
+-		info = dev_get_drvdata(dev);
++	if (!data || !size)
++		return -EINVAL;
+ 
+ 	pr_info("getFWdata starting ...\n");
+-	if (pathToFile == NULL || strncmp(pathToFile, "NULL", 4) == 0) {
+-		from = 1;
+-		if (info != NULL && info->board)
+-			path = (char *)info->board->fw_name;
+-		else
+-			path = PATH_FILE_FW;
++
++	if (!dev) {
++		pr_err("getFWdata: No device found! ERROR %08X\n", ERROR_OP_NOT_ALLOW);
++		return ERROR_OP_NOT_ALLOW;
+ 	}
+-	/* keep the switch case because if the argument passed is null but
+-	 * the option from .h is not set we still try to load from bin */
+-	switch (from) {
+-#ifdef FW_H_FILE
+-	case 1:
+-		pr_info("Read FW from .h file!\n");
+-		*size = FW_SIZE_NAME;
+-		*data = (u8 *)kmalloc((*size) * sizeof(u8), GFP_KERNEL);
+-		if (*data == NULL) {
+-			pr_err("getFWdata: Impossible to allocate memory! ERROR %08X\n",
+-				ERROR_ALLOC);
+-			return ERROR_ALLOC;
+-		}
+-		memcpy(*data, (u8 *)FW_ARRAY_NAME, (*size));
+ 
+-		break;
+-#endif
+-	default:
+-		pr_info("Read FW from BIN file %s !\n", path);
+-
+-		if (dev != NULL) {
+-			res = request_firmware(&fw, path, dev);
+-			if (res == 0) {
+-				*size = fw->size;
+-				*data = (u8 *)kmalloc((*size) * sizeof(u8),
+-						      GFP_KERNEL);
+-				if (*data == NULL) {
+-					pr_err("getFWdata: Impossible to allocate memory! ERROR %08X\n",
+-						ERROR_ALLOC);
+-					release_firmware(fw);
+-					return ERROR_ALLOC;
+-				}
+-				memcpy(*data, (u8 *)fw->data, (*size));
+-				release_firmware(fw);
+-			} else {
+-				pr_err("getFWdata: No File found! ERROR %08X\n",
+-					ERROR_FILE_NOT_FOUND);
+-				return ERROR_FILE_NOT_FOUND;
+-			}
++	info = dev_get_drvdata(dev);
++	if (!info || !info->client) {
++		pr_err("getFWdata: Invalid driver data!\n");
++		return -ENODEV;
++	}
++
++	if (pathToFile && strncmp(pathToFile, "NULL", 4) != 0) {
++		fw_name = pathToFile;
++		pr_info("getFWdata: Using firmware from argument: %s\n", fw_name);
++	} else {
++		res = device_property_read_string(&info->client->dev, "firmware-name", &fw_name);
++		if (res || !fw_name) {
++			pr_warn("getFWdata: 'firmware-name' not found in DT, using default\n");
++			fw_name = PATH_FILE_FW;
+ 		} else {
+-			pr_err("getFWdata: No device found! ERROR %08X\n",
+-				ERROR_OP_NOT_ALLOW);
+-			return ERROR_OP_NOT_ALLOW;
++			pr_info("getFWdata: Using firmware from DT: %s\n", fw_name);
+ 		}
+ 	}
+ 
+-	pr_info("getFWdata Finished!\n");
++	res = request_firmware(&fw, fw_name, &info->client->dev);
++	if (res) {
++		pr_err("getFWdata: request_firmware failed for '%s'! ERROR %08X\n",
++		       fw_name, ERROR_FILE_NOT_FOUND);
++		return ERROR_FILE_NOT_FOUND;
++	}
++
++	*size = fw->size;
++	*data = kmalloc(*size, GFP_KERNEL);
++	if (!*data) {
++		pr_err("getFWdata: kmalloc failed! ERROR %08X\n", ERROR_ALLOC);
++		release_firmware(fw);
++		return ERROR_ALLOC;
++	}
++
++	memcpy(*data, fw->data, *size);
++	release_firmware(fw);
++
++	pr_info("getFWdata: Firmware loaded successfully (%d bytes)\n", *size);
+ 	return OK;
+ }
+ 
+ 
++
+ /**
+   * Perform all the steps to read the FW that should be burnt in the IC from
+   * the system and parse it in order to fill a Firmware struct with the relevant
+-- 
+2.51.1
+

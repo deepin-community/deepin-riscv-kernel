@@ -1,0 +1,179 @@
+From 2a7f4551bc3b4d4fc8d42c65789b9794b5e1903e Mon Sep 17 00:00:00 2001
+From: map220v <map220v300@gmail.com>
+Date: Fri, 28 Jul 2023 00:37:39 +0300
+Subject: [PATCH 28/77] ASoC: qcom: SM8150: Add machine driver
+
+ASoC: qcom: sm8150: Fix compilation in v6.7.0
+
+ASoC: qcom: sm8150: Fix compilaton in v6.15.0
+---
+ sound/soc/qcom/Kconfig  | 12 ++++++++++++
+ sound/soc/qcom/Makefile |  2 ++
+ sound/soc/qcom/sm8150.c | 41 +++++++++++++++++++++--------------------
+ 3 files changed, 35 insertions(+), 20 deletions(-)
+
+diff --git a/sound/soc/qcom/Kconfig b/sound/soc/qcom/Kconfig
+index e6e24f3b9922..41dbbdaa0f70 100644
+--- a/sound/soc/qcom/Kconfig
++++ b/sound/soc/qcom/Kconfig
+@@ -182,6 +182,18 @@ config SND_SOC_SDM845
+ 	  SDM845 SoC-based systems.
+ 	  Say Y if you want to use audio device on this SoCs.
+ 
++config SND_SOC_SM8150
++	tristate "SoC Machine driver for SM8150 boards"
++	depends on QCOM_APR && SOUNDWIRE
++	depends on COMMON_CLK
++	select SND_SOC_QDSP6
++	select SND_SOC_QCOM_COMMON
++	select SND_SOC_QCOM_SDW
++	help
++	  To add support for audio on Qualcomm Technologies Inc.
++	  SM8150 SoC-based systems.
++	  Say Y if you want to use audio device on this SoCs.
++
+ config SND_SOC_SM8250
+ 	tristate "SoC Machine driver for SM8250 boards"
+ 	depends on QCOM_APR && SOUNDWIRE
+diff --git a/sound/soc/qcom/Makefile b/sound/soc/qcom/Makefile
+index 985ce2ae286b..712e4aa0144e 100644
+--- a/sound/soc/qcom/Makefile
++++ b/sound/soc/qcom/Makefile
+@@ -25,6 +25,7 @@ snd-soc-apq8096-y := apq8096.o
+ snd-soc-sc7180-y := sc7180.o
+ snd-soc-sc7280-y := sc7280.o
+ snd-soc-sdm845-y := sdm845.o
++snd-soc-sm8150-y := sm8150.o
+ snd-soc-sm8250-y := sm8250.o
+ snd-soc-sc8280xp-y := sc8280xp.o
+ snd-soc-qcom-common-y := common.o
+@@ -39,6 +40,7 @@ obj-$(CONFIG_SND_SOC_SC7180) += snd-soc-sc7180.o
+ obj-$(CONFIG_SND_SOC_SC7280) += snd-soc-sc7280.o
+ obj-$(CONFIG_SND_SOC_SC8280XP) += snd-soc-sc8280xp.o
+ obj-$(CONFIG_SND_SOC_SDM845) += snd-soc-sdm845.o
++obj-$(CONFIG_SND_SOC_SM8150) += snd-soc-sm8150.o
+ obj-$(CONFIG_SND_SOC_SM8250) += snd-soc-sm8250.o
+ obj-$(CONFIG_SND_SOC_QCOM_COMMON) += snd-soc-qcom-common.o
+ obj-$(CONFIG_SND_SOC_QCOM_SDW) += snd-soc-qcom-sdw.o
+diff --git a/sound/soc/qcom/sm8150.c b/sound/soc/qcom/sm8150.c
+index 192714ca1976..8ad61345bb73 100644
+--- a/sound/soc/qcom/sm8150.c
++++ b/sound/soc/qcom/sm8150.c
+@@ -3,6 +3,7 @@
+  * Copyright (c) 2022, The Linux Foundation. All rights reserved.
+  */
+ 
++#include <dt-bindings/sound/qcom,q6afe.h>
+ #include <linux/module.h>
+ #include <linux/platform_device.h>
+ #include <linux/of_device.h>
+@@ -63,8 +64,8 @@ static int sm8150_be_hw_params_fixup(struct snd_soc_pcm_runtime *rtd,
+ static int sm8150_slim_snd_hw_params(struct snd_pcm_substream *substream,
+ 				     struct snd_pcm_hw_params *params)
+ {
+-	struct snd_soc_pcm_runtime *rtd = asoc_substream_to_rtd(substream);
+-	struct snd_soc_dai *cpu_dai = asoc_rtd_to_cpu(rtd, 0);
++	struct snd_soc_pcm_runtime *rtd = snd_soc_substream_to_rtd(substream);
++	struct snd_soc_dai *cpu_dai = snd_soc_rtd_to_cpu(rtd, 0);
+ 	struct snd_soc_dai *codec_dai;
+ 	struct sm8150_snd_data *pdata = snd_soc_card_get_drvdata(rtd->card);
+ 	u32 rx_ch[SLIM_MAX_RX_PORTS], tx_ch[SLIM_MAX_TX_PORTS];
+@@ -103,8 +104,8 @@ static int sm8150_slim_snd_hw_params(struct snd_pcm_substream *substream,
+ static int sm8150_tdm_snd_hw_params(struct snd_pcm_substream *substream,
+ 					struct snd_pcm_hw_params *params)
+ {
+-	struct snd_soc_pcm_runtime *rtd = asoc_substream_to_rtd(substream);
+-	struct snd_soc_dai *cpu_dai = asoc_rtd_to_cpu(rtd, 0);
++	struct snd_soc_pcm_runtime *rtd = snd_soc_substream_to_rtd(substream);
++	struct snd_soc_dai *cpu_dai = snd_soc_rtd_to_cpu(rtd, 0);
+ 	struct snd_soc_dai *codec_dai;
+ 	int ret = 0, j;
+ 	int channels, slot_width;
+@@ -194,8 +195,8 @@ static int sm8150_tdm_snd_hw_params(struct snd_pcm_substream *substream,
+ static int sm8150_snd_hw_params(struct snd_pcm_substream *substream,
+ 					struct snd_pcm_hw_params *params)
+ {
+-	struct snd_soc_pcm_runtime *rtd = asoc_substream_to_rtd(substream);
+-	struct snd_soc_dai *cpu_dai = asoc_rtd_to_cpu(rtd, 0);
++	struct snd_soc_pcm_runtime *rtd = snd_soc_substream_to_rtd(substream);
++	struct snd_soc_dai *cpu_dai = snd_soc_rtd_to_cpu(rtd, 0);
+ 	int ret = 0;
+ 
+ 	switch (cpu_dai->id) {
+@@ -216,8 +217,8 @@ static int sm8150_snd_hw_params(struct snd_pcm_substream *substream,
+ static int sm8150_dai_init(struct snd_soc_pcm_runtime *rtd)
+ {
+ 	struct snd_soc_card *card = rtd->card;
+-	struct snd_soc_dai *codec_dai = asoc_rtd_to_codec(rtd, 0);
+-	struct snd_soc_dai *cpu_dai = asoc_rtd_to_cpu(rtd, 0);
++	struct snd_soc_dai *codec_dai = snd_soc_rtd_to_codec(rtd, 0);
++	struct snd_soc_dai *cpu_dai = snd_soc_rtd_to_cpu(rtd, 0);
+ 	struct sm8150_snd_data *pdata = snd_soc_card_get_drvdata(card);
+ 	struct snd_soc_dai_link *link = rtd->dai_link;
+ 	struct snd_jack *jack;
+@@ -296,13 +297,13 @@ static int sm8150_dai_init(struct snd_soc_pcm_runtime *rtd)
+ 
+ static int sm8150_snd_startup(struct snd_pcm_substream *substream)
+ {
+-	unsigned int fmt = SND_SOC_DAIFMT_CBS_CFS;
+-	unsigned int codec_dai_fmt = SND_SOC_DAIFMT_CBS_CFS;
+-	struct snd_soc_pcm_runtime *rtd = asoc_substream_to_rtd(substream);
++	unsigned int fmt = SND_SOC_DAIFMT_CBC_CFC;
++	unsigned int codec_dai_fmt = SND_SOC_DAIFMT_CBC_CFC;
++	struct snd_soc_pcm_runtime *rtd = snd_soc_substream_to_rtd(substream);
+ 	struct snd_soc_card *card = rtd->card;
+ 	struct sm8150_snd_data *data = snd_soc_card_get_drvdata(card);
+-	struct snd_soc_dai *cpu_dai = asoc_rtd_to_cpu(rtd, 0);
+-	struct snd_soc_dai *codec_dai = asoc_rtd_to_codec(rtd, 0);
++	struct snd_soc_dai *cpu_dai = snd_soc_rtd_to_cpu(rtd, 0);
++	struct snd_soc_dai *codec_dai = snd_soc_rtd_to_codec(rtd, 0);
+ 
+ 	switch (cpu_dai->id) {
+ 	case QUATERNARY_TDM_RX_0:
+@@ -326,10 +327,10 @@ static int sm8150_snd_startup(struct snd_pcm_substream *substream)
+ 
+ static void sm8150_snd_shutdown(struct snd_pcm_substream *substream)
+ {
+-	struct snd_soc_pcm_runtime *rtd = asoc_substream_to_rtd(substream);
++	struct snd_soc_pcm_runtime *rtd = snd_soc_substream_to_rtd(substream);
+ 	struct snd_soc_card *card = rtd->card;
+ 	struct sm8150_snd_data *data = snd_soc_card_get_drvdata(card);
+-	struct snd_soc_dai *cpu_dai = asoc_rtd_to_cpu(rtd, 0);
++	struct snd_soc_dai *cpu_dai = snd_soc_rtd_to_cpu(rtd, 0);
+ 
+ 	switch (cpu_dai->id) {
+ 	case QUATERNARY_TDM_RX_0:
+@@ -351,9 +352,9 @@ static void sm8150_snd_shutdown(struct snd_pcm_substream *substream)
+ 
+ static int sm8150_snd_prepare(struct snd_pcm_substream *substream)
+ {
+-	struct snd_soc_pcm_runtime *rtd = asoc_substream_to_rtd(substream);
++	struct snd_soc_pcm_runtime *rtd = snd_soc_substream_to_rtd(substream);
+ 	struct sm8150_snd_data *data = snd_soc_card_get_drvdata(rtd->card);
+-	struct snd_soc_dai *cpu_dai = asoc_rtd_to_cpu(rtd, 0);
++	struct snd_soc_dai *cpu_dai = snd_soc_rtd_to_cpu(rtd, 0);
+ 	struct sdw_stream_runtime *sruntime = data->sruntime[cpu_dai->id];
+ 	int ret;
+ 
+@@ -390,9 +391,9 @@ static int sm8150_snd_prepare(struct snd_pcm_substream *substream)
+ 
+ static int sm8150_snd_hw_free(struct snd_pcm_substream *substream)
+ {
+-	struct snd_soc_pcm_runtime *rtd = asoc_substream_to_rtd(substream);
++	struct snd_soc_pcm_runtime *rtd = snd_soc_substream_to_rtd(substream);
+ 	struct sm8150_snd_data *data = snd_soc_card_get_drvdata(rtd->card);
+-	struct snd_soc_dai *cpu_dai = asoc_rtd_to_cpu(rtd, 0);
++	struct snd_soc_dai *cpu_dai = snd_soc_rtd_to_cpu(rtd, 0);
+ 	struct sdw_stream_runtime *sruntime = data->sruntime[cpu_dai->id];
+ 
+ 	if (sruntime && data->stream_prepared[cpu_dai->id]) {
+@@ -474,4 +475,4 @@ static struct platform_driver snd_sm8150_driver = {
+ module_platform_driver(snd_sm8150_driver);
+ MODULE_AUTHOR("map220v <map220v300@gmail.com");
+ MODULE_DESCRIPTION("SM8150 ASoC Machine Driver");
+-MODULE_LICENSE("GPL v2");
+\ No newline at end of file
++MODULE_LICENSE("GPL v2");
+-- 
+2.51.1
+

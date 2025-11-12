@@ -1,0 +1,29 @@
+From 418f8b8037aa66c186dfd51036aeb588df78e950 Mon Sep 17 00:00:00 2001
+From: Andrew Gigena <mail@andrewgigena.dev>
+Date: Sat, 19 Jul 2025 12:37:33 -0300
+Subject: [PATCH 48/77] dt-bindings: crypto: ice: Document sm8150 inline crypto
+ engine
+
+Document the compatible used for the inline crypto engine found on
+SM8150.
+
+Signed-off-by: Andrew Gigena <mail@andrewgigena.dev>
+---
+ .../devicetree/bindings/crypto/qcom,inline-crypto-engine.yaml    | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/Documentation/devicetree/bindings/crypto/qcom,inline-crypto-engine.yaml b/Documentation/devicetree/bindings/crypto/qcom,inline-crypto-engine.yaml
+index 08fe6a707a37..3b279d107c77 100644
+--- a/Documentation/devicetree/bindings/crypto/qcom,inline-crypto-engine.yaml
++++ b/Documentation/devicetree/bindings/crypto/qcom,inline-crypto-engine.yaml
+@@ -17,6 +17,7 @@ properties:
+           - qcom,sa8775p-inline-crypto-engine
+           - qcom,sc7180-inline-crypto-engine
+           - qcom,sc7280-inline-crypto-engine
++          - qcom,sm8150-inline-crypto-engine
+           - qcom,sm8450-inline-crypto-engine
+           - qcom,sm8550-inline-crypto-engine
+           - qcom,sm8650-inline-crypto-engine
+-- 
+2.51.1
+

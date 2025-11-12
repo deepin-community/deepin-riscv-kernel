@@ -1,0 +1,172 @@
+From 42f14de999221b2322c62d3d56b253152fd958a0 Mon Sep 17 00:00:00 2001
+From: map220v <map220v300@gmail.com>
+Date: Wed, 10 Jan 2024 14:59:58 +0000
+Subject: [PATCH 25/77] input: nt36523: Remove fw boot delay. Should be fine,
+ because we load touchscreen as a module and panel module is built-in, so
+ there is enough time for panel driver to send commands.
+
+---
+ drivers/input/touchscreen/nt36523/nt36xxx.c   | 49 +++----------------
+ drivers/input/touchscreen/nt36523/nt36xxx.h   |  3 +-
+ .../touchscreen/nt36523/nt36xxx_fw_update.c   | 17 -------
+ 3 files changed, 8 insertions(+), 61 deletions(-)
+
+diff --git a/drivers/input/touchscreen/nt36523/nt36xxx.c b/drivers/input/touchscreen/nt36523/nt36xxx.c
+index ea098444dc83..9f0c58083d25 100644
+--- a/drivers/input/touchscreen/nt36523/nt36xxx.c
++++ b/drivers/input/touchscreen/nt36523/nt36xxx.c
+@@ -47,11 +47,6 @@ uint8_t esd_retry = 0;
+ 
+ struct nvt_ts_data *ts;
+ 
+-#if BOOT_UPDATE_FIRMWARE
+-static struct workqueue_struct *nvt_fwu_wq;
+-extern void Boot_Update_Firmware(struct work_struct *work);
+-#endif
+-
+ #ifdef CONFIG_DRM
+ static int nvt_drm_notifier_callback(struct notifier_block *self, unsigned long event, void *data);
+ #endif
+@@ -1173,7 +1168,7 @@ static int8_t nvt_ts_check_chip_ver_trim(uint32_t chip_ver_trim_addr)
+ 	return 0;
+ }
+ 
+-int32_t disable_pen_input_device(bool disable) {
++static int32_t disable_pen_input_device(bool disable) {
+ 	uint8_t buf[8] = {0};
+ 	int32_t ret = 0;
+ 
+@@ -1488,15 +1483,9 @@ static int32_t nvt_ts_probe(struct spi_device *client)
+ //#endif
+ 
+ #if BOOT_UPDATE_FIRMWARE
+-	nvt_fwu_wq = alloc_workqueue("nvt_fwu_wq", WQ_UNBOUND | WQ_MEM_RECLAIM, 1);
+-	if (!nvt_fwu_wq) {
+-		NVT_ERR("nvt_fwu_wq create workqueue failed\n");
+-		ret = -ENOMEM;
+-		goto err_create_nvt_fwu_wq_failed;
+-	}
+-	INIT_DELAYED_WORK(&ts->nvt_fwu_work, Boot_Update_Firmware);
+-	// please make sure boot update start after display reset(RESX) sequence
+-	queue_delayed_work(nvt_fwu_wq, &ts->nvt_fwu_work, msecs_to_jiffies(14000));
++	ret = nvt_update_firmware(ts->fw_name);
++	if (ret)
++		NVT_ERR("download firmware failed\n");
+ #endif
+ 
+ 	NVT_LOG("NVT_TOUCH_ESD_PROTECT is %d\n", NVT_TOUCH_ESD_PROTECT);
+@@ -1532,6 +1521,7 @@ static int32_t nvt_ts_probe(struct spi_device *client)
+ #endif
+ 
+ 	bTouchIsAwake = 1;
++	disable_pen_input_device(false);
+ 	NVT_LOG("end\n");
+ 
+ 	nvt_irq_enable(true);
+@@ -1553,15 +1543,6 @@ static int32_t nvt_ts_probe(struct spi_device *client)
+ 		nvt_esd_check_wq = NULL;
+ 	}
+ err_create_nvt_esd_check_wq_failed:
+-#endif
+-#if BOOT_UPDATE_FIRMWARE
+-	if (nvt_fwu_wq) {
+-		cancel_delayed_work_sync(&ts->nvt_fwu_work);
+-		destroy_workqueue(nvt_fwu_wq);
+-		nvt_fwu_wq = NULL;
+-	}
+-err_create_nvt_fwu_wq_failed:
+-
+ #endif
+ 	free_irq(client->irq, ts);
+ err_int_request_failed:
+@@ -1635,14 +1616,6 @@ static void nvt_ts_remove(struct spi_device *client)
+ 	}
+ #endif
+ 
+-#if BOOT_UPDATE_FIRMWARE
+-	if (nvt_fwu_wq) {
+-		cancel_delayed_work_sync(&ts->nvt_fwu_work);
+-		destroy_workqueue(nvt_fwu_wq);
+-		nvt_fwu_wq = NULL;
+-	}
+-#endif
+-
+ 	nvt_irq_enable(false);
+ 	free_irq(client->irq, ts);
+ 
+@@ -1692,14 +1665,6 @@ static void nvt_ts_shutdown(struct spi_device *client)
+ 		nvt_esd_check_wq = NULL;
+ 	}
+ #endif /* #if NVT_TOUCH_ESD_PROTECT */
+-
+-#if BOOT_UPDATE_FIRMWARE
+-	if (nvt_fwu_wq) {
+-		cancel_delayed_work_sync(&ts->nvt_fwu_work);
+-		destroy_workqueue(nvt_fwu_wq);
+-		nvt_fwu_wq = NULL;
+-	}
+-#endif
+ }
+ 
+ /*******************************************************
+@@ -1741,13 +1706,13 @@ static int32_t nvt_ts_suspend(struct device *dev)
+ 
+ 	NVT_LOG("suspend start\n");
+ 
+-	bTouchIsAwake = 0;
+-
+ 	if (ts->pen_input_dev_enable) {
+ 		NVT_LOG("if enable pen,will close it");
+ 		disable_pen_input_device(true);
+ 	}
+ 
++	bTouchIsAwake = 0;
++
+ 	if (ts->db_wakeup) {
+ 		/*---write command to enter "wakeup gesture mode"---*/
+ 		/*DoubleClick wakeup CMD was sent by display to meet timing*/
+diff --git a/drivers/input/touchscreen/nt36523/nt36xxx.h b/drivers/input/touchscreen/nt36523/nt36xxx.h
+index 2c6a30ecceca..530d3661365d 100644
+--- a/drivers/input/touchscreen/nt36523/nt36xxx.h
++++ b/drivers/input/touchscreen/nt36523/nt36xxx.h
+@@ -237,9 +237,8 @@ int32_t nvt_read_pid(void);
+ bool nvt_get_dbgfw_status(void);
+ int32_t nvt_set_pocket_palm_switch(uint8_t pocket_palm_switch);
+ void Boot_Update_Firmware(struct work_struct *work);
+-int32_t disable_pen_input_device(bool disable);
+ #if NVT_TOUCH_ESD_PROTECT
+ extern void nvt_esd_check_enable(uint8_t enable);
+ #endif /* #if NVT_TOUCH_ESD_PROTECT */
+ 
+-#endif /* _LINUX_NVT_TOUCH_H */
++#endif /* _LINUX_NVT_TOUCH_H */
+\ No newline at end of file
+diff --git a/drivers/input/touchscreen/nt36523/nt36xxx_fw_update.c b/drivers/input/touchscreen/nt36523/nt36xxx_fw_update.c
+index 71c271d8c548..f5da9275542d 100644
+--- a/drivers/input/touchscreen/nt36523/nt36xxx_fw_update.c
++++ b/drivers/input/touchscreen/nt36523/nt36xxx_fw_update.c
+@@ -838,21 +838,4 @@ int32_t nvt_update_firmware(const char *firmware_name)
+ 
+ 	return ret;
+ }
+-
+-/*******************************************************
+-Description:
+-	Novatek touchscreen update firmware when booting
+-	function.
+-
+-return:
+-	n.a.
+-*******************************************************/
+-void Boot_Update_Firmware(struct work_struct *work)
+-{
+-	mutex_lock(&ts->lock);
+-	nvt_update_firmware(ts->fw_name);
+-	disable_pen_input_device(false);
+-	nvt_get_fw_info();
+-	mutex_unlock(&ts->lock);
+-}
+ #endif /* BOOT_UPDATE_FIRMWARE */
+-- 
+2.51.1
+

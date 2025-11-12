@@ -1,0 +1,31 @@
+From d8523d1c1046149bf83e5e962be9bad5755822e7 Mon Sep 17 00:00:00 2001
+From: map220v <map220v300@gmail.com>
+Date: Wed, 2 Aug 2023 19:17:45 +0300
+Subject: [PATCH 20/77] arm64: dts: qcom: pm8150b: Add fuel gauge
+
+---
+ arch/arm64/boot/dts/qcom/pm8150b.dtsi | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/pm8150b.dtsi b/arch/arm64/boot/dts/qcom/pm8150b.dtsi
+index 3f7b0b6a1d10..97361a586be9 100644
+--- a/arch/arm64/boot/dts/qcom/pm8150b.dtsi
++++ b/arch/arm64/boot/dts/qcom/pm8150b.dtsi
+@@ -150,6 +150,14 @@ pm8150b_adc_tm: adc-tm@3500 {
+ 			status = "disabled";
+ 		};
+ 
++		pm8150b_fg: fuel-gauge@4000 {
++			compatible = "qcom,pm8150b-fg";
++			reg = <0x4000>;
++			interrupts = <0x2 0x40 0x3 IRQ_TYPE_EDGE_RISING>;
++			interrupt-names = "soc-delta";
++			status = "disabled";
++		};
++
+ 		pm8150b_gpios: gpio@c000 {
+ 			compatible = "qcom,pm8150b-gpio", "qcom,spmi-gpio";
+ 			reg = <0xc000>;
+-- 
+2.51.1
+

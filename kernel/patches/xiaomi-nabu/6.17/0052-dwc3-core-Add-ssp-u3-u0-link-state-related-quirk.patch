@@ -1,0 +1,83 @@
+From 1a82749b7520d4396804a46d6170e3185494bc3c Mon Sep 17 00:00:00 2001
+From: Andrew Gigena <mail@andrewgigena.dev>
+Date: Thu, 31 Jul 2025 11:49:14 -0300
+Subject: [PATCH 52/77] dwc3: core: Add ssp u3 u0 link state related quirk
+
+USB PHY (qmp super speed phy) is unable to consistently move between
+the u3 (p3)/u0(p0) states causing controller and phy link level issues
+resulting in device re-enumeration. Fix the issue by forcing qmp phy to
+move to P2 state always before moving to P0 from P3 state. Forcing by
+phy link state is done by enabling Ux_exit_in_Px (BIT:27) and P3ExSigP2
+(BIT:10) of GUSB3PIPECTL register.
+
+Signed-off-by: Andrew Gigena <mail@andrewgigena.dev>
+---
+ Documentation/devicetree/bindings/usb/snps,dwc3-common.yaml | 6 ++++++
+ drivers/usb/dwc3/core.c                                     | 6 ++++++
+ drivers/usb/dwc3/core.h                                     | 2 ++
+ 3 files changed, 14 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/usb/snps,dwc3-common.yaml b/Documentation/devicetree/bindings/usb/snps,dwc3-common.yaml
+index 6c0b8b653824..b7ed8c0392d5 100644
+--- a/Documentation/devicetree/bindings/usb/snps,dwc3-common.yaml
++++ b/Documentation/devicetree/bindings/usb/snps,dwc3-common.yaml
+@@ -233,6 +233,12 @@ properties:
+       asserts utmi_sleep_n.
+     type: boolean
+ 
++  snps,ssp-u3-u0-quirk:
++    description:
++      When set core always changes PHY power state P2, before attempting a
++      U3 exit handshake.
++    type: boolean
++
+   snps,hird-threshold:
+     description: HIRD threshold
+     $ref: /schemas/types.yaml#/definitions/uint8
+diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
+index 8002c23a5a02..ba30ad0fb62e 100644
+--- a/drivers/usb/dwc3/core.c
++++ b/drivers/usb/dwc3/core.c
+@@ -703,6 +703,10 @@ static int dwc3_ss_phy_setup(struct dwc3 *dwc, int index)
+ 	if (dwc->dis_del_phy_power_chg_quirk)
+ 		reg &= ~DWC3_GUSB3PIPECTL_DEPOCHANGE;
+ 
++	if (dwc->ssp_u3_u0_quirk)
++		reg |= (DWC3_GUSB3PIPECTL_UX_EXIT_PX |
++				DWC3_GUSB3PIPECTL_P3EXSIGP2);
++
+ 	dwc3_writel(dwc->regs, DWC3_GUSB3PIPECTL(index), reg);
+ 
+ 	return 0;
+@@ -1830,6 +1834,8 @@ static void dwc3_get_properties(struct dwc3 *dwc)
+ 
+ 	dwc->tx_de_emphasis_quirk = device_property_read_bool(dev,
+ 				"snps,tx_de_emphasis_quirk");
++	dwc->ssp_u3_u0_quirk = device_property_read_bool(dev,
++				"snps,ssp-u3-u0-quirk");
+ 	device_property_read_u8(dev, "snps,tx_de_emphasis",
+ 				&tx_de_emphasis);
+ 	device_property_read_string(dev, "snps,hsphy_interface",
+diff --git a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
+index d5b985fa12f4..8fc8690b02c3 100644
+--- a/drivers/usb/dwc3/core.h
++++ b/drivers/usb/dwc3/core.h
+@@ -331,6 +331,7 @@
+ #define DWC3_GUSB3PIPECTL_DEP1P2P3_EN	DWC3_GUSB3PIPECTL_DEP1P2P3(1)
+ #define DWC3_GUSB3PIPECTL_DEPOCHANGE	BIT(18)
+ #define DWC3_GUSB3PIPECTL_SUSPHY	BIT(17)
++#define DWC3_GUSB3PIPECTL_P3EXSIGP2	BIT(10)
+ #define DWC3_GUSB3PIPECTL_LFPSFILT	BIT(9)
+ #define DWC3_GUSB3PIPECTL_RX_DETOPOLL	BIT(8)
+ #define DWC3_GUSB3PIPECTL_TX_DEEPH_MASK	DWC3_GUSB3PIPECTL_TX_DEEPH(3)
+@@ -1381,6 +1382,7 @@ struct dwc3 {
+ 	unsigned		gfladj_refclk_lpm_sel:1;
+ 
+ 	unsigned		tx_de_emphasis_quirk:1;
++	unsigned		ssp_u3_u0_quirk:1;
+ 	unsigned		tx_de_emphasis:2;
+ 
+ 	unsigned		dis_metastability_quirk:1;
+-- 
+2.51.1
+

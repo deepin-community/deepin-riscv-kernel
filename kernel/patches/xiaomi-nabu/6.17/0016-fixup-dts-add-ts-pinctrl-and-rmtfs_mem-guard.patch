@@ -1,0 +1,107 @@
+From 0e3df7a274a3ee687db861bee4bdacdc3e496816 Mon Sep 17 00:00:00 2001
+From: Caleb Connolly <caleb@connolly.tech>
+Date: Wed, 5 May 2021 16:40:04 +0100
+Subject: [PATCH 16/77] fixup! dts: add ts pinctrl and rmtfs_mem guard
+
+---
+ .../boot/dts/qcom/sm8150-oneplus-common.dtsi  | 70 +++++++++++++++++++
+ 1 file changed, 70 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/sm8150-oneplus-common.dtsi b/arch/arm64/boot/dts/qcom/sm8150-oneplus-common.dtsi
+index 2fee2525a082..993ac0c2b4dc 100644
+--- a/arch/arm64/boot/dts/qcom/sm8150-oneplus-common.dtsi
++++ b/arch/arm64/boot/dts/qcom/sm8150-oneplus-common.dtsi
+@@ -13,6 +13,8 @@
+ #include "pm8150b.dtsi"
+ #include "pm8150l.dtsi"
+ 
++/delete-node/ &rmtfs_mem;
++
+ / {
+ 	compatible = "qcom,sm8150-mtp", "qcom,sm8150";
+ 
+@@ -39,6 +41,34 @@ vreg_s4a_1p8: pm8150-s4 {
+ 
+ 		vin-supply = <&vph_pwr>;
+ 	};
++
++	reserved-memory {
++		/* The rmtfs_mem needs to be guarded due to "XPU limitations"
++		 * it is otherwise possible for an allocation adjacent to the
++		 * rmtfs_mem region to trigger an XPU violation, causing a crash.
++		 */
++		// rmtfs_lower_guard: memory@f2900000 {
++		// 	no-map;
++		// 	reg = <0 0xf2900000 0 0x1000>;
++		// };
++		/*
++		 * The rmtfs memory region in downstream is 'dynamically allocated'
++		 * but given the same address every time. Hard code it as this address is
++		 * where the modem firmware expects it to be.
++		 */
++		rmtfs_mem: memory@f2901000 {
++			compatible = "qcom,rmtfs-mem";
++			reg = <0x0 0xf2901000 0x0 0x200000>;
++			no-map;
++
++			qcom,client-id = <1>;
++			qcom,vmid = <15>;
++		};
++		// rmtfs_upper: memory@f2902000 {
++		// 	no-map;
++		// 	reg = <0 0xf2902000 0 0x1000>;
++		// };
++	};
+ };
+ 
+ &adsp_mem {
+@@ -425,6 +455,46 @@ &remoteproc_mpss {
+ // Some of these might be guacamole specific
+ &tlmm {
+ 	gpio-reserved-ranges = <0 4>, <126 4>;
++
++	tp_irq_active: tp-irq-active {
++		mux {
++			pins = "gpio122";
++			function = "gpio";
++		};
++
++		config {
++			pins = "gpio122";
++			drive-strength = <0x08>;
++			bias-disable;
++			input-enable;
++		};
++	};
++
++	tp_rst_active: tp-rst-active {
++		mux {
++			pins = "gpio54";
++			function = "gpio";
++		};
++
++		config {
++			pins = "gpio54";
++			drive-strength = <0x08>;
++			bias-disable;
++		};
++	};
++
++	tp_1v8_active: tp-1v8-active {
++		mux {
++			pins = "gpio119";
++			function = "gpio";
++		};
++
++		config {
++			pins = "gpio119";
++			drive-strength = <0x08>;
++			bias-pull-up;
++		};
++	};
+ };
+ 
+ &ufs_mem_hc {
+-- 
+2.51.1
+

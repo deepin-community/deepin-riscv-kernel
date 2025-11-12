@@ -1,0 +1,40 @@
+From d723c5271843396c1b61e3e0170124791a1861ce Mon Sep 17 00:00:00 2001
+From: Casey Connolly <casey.connolly@linaro.org>
+Date: Thu, 19 Jun 2025 16:55:14 +0200
+Subject: [PATCH 36/77] power: supply: qcom_smbx: respect battery
+ charge-term-current-microamp
+
+Respect the max current limit set on the battery node, one some devices
+this is set conservatively to avoid overheating since they only have a
+single charger IC (instead of two in parallel).
+
+Signed-off-by: Casey Connolly <casey.connolly@linaro.org>
+---
+ drivers/power/supply/qcom_smbx.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/power/supply/qcom_smbx.c b/drivers/power/supply/qcom_smbx.c
+index fc2a8e204356..7fc232fa7260 100644
+--- a/drivers/power/supply/qcom_smbx.c
++++ b/drivers/power/supply/qcom_smbx.c
+@@ -584,7 +584,7 @@ static void smb_status_change_work(struct work_struct *work)
+ 		current_ua = CDP_CURRENT_UA;
+ 		break;
+ 	case POWER_SUPPLY_USB_TYPE_DCP:
+-		current_ua = DCP_CURRENT_UA;
++		current_ua = chip->batt_info->constant_charge_current_max_ua;
+ 		break;
+ 	case POWER_SUPPLY_USB_TYPE_SDP:
+ 	default:
+@@ -990,6 +990,8 @@ static int smb_probe(struct platform_device *pdev)
+ 	if (rc)
+ 		return dev_err_probe(chip->dev, rc,
+ 				     "Failed to get battery info\n");
++	if (chip->batt_info->constant_charge_current_max_ua == -EINVAL)
++		chip->batt_info->constant_charge_current_max_ua = DCP_CURRENT_UA;
+ 
+ 	rc = devm_delayed_work_autocancel(chip->dev, &chip->status_change_work,
+ 					  smb_status_change_work);
+-- 
+2.51.1
+

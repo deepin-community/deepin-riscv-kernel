@@ -1,0 +1,42 @@
+From 91b3bcd64db648b6576461ea037c1459ea488710 Mon Sep 17 00:00:00 2001
+From: tx0 <me@tx0.su>
+Date: Sat, 29 Mar 2025 16:33:10 +0500
+Subject: [PATCH 30/77] nt36xxx: Change pen resolution  This is done to be able
+ to use newer firmware with pen fixes
+ https://github.com/dev-harsh1998/android_kernel_xiaomi_nabu/tree/lineage-22.1/firmware
+
+---
+ drivers/input/touchscreen/nt36523/nt36xxx.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/input/touchscreen/nt36523/nt36xxx.c b/drivers/input/touchscreen/nt36523/nt36xxx.c
+index 9f0c58083d25..46cc0dd60c88 100644
+--- a/drivers/input/touchscreen/nt36523/nt36xxx.c
++++ b/drivers/input/touchscreen/nt36523/nt36xxx.c
+@@ -1105,10 +1105,10 @@ static irqreturn_t nvt_ts_work_func(int irq, void *data)
+ 				// report pen data
+ 				pen_x = (uint32_t)(point_data[67] << 8) + (uint32_t)(point_data[68]);
+ 				pen_y = (uint32_t)(point_data[69] << 8) + (uint32_t)(point_data[70]);
+-				if (pen_x >= ts->abs_x_max * 2 - 1) {
++				if (pen_x >= ts->abs_x_max * 8 - 1) {
+ 					pen_x -= 1;
+ 				}
+-				if (pen_y >= ts->abs_y_max * 2 - 1) {
++				if (pen_y >= ts->abs_y_max * 8 - 1) {
+ 					pen_y -= 1;
+ 				}
+ 				pen_pressure = (uint32_t)(point_data[71] << 8) + (uint32_t)(point_data[72]);
+@@ -1419,8 +1419,8 @@ static int32_t nvt_ts_probe(struct spi_device *client)
+ 		int x_max, y_max;
+ 
+ 		if (ts->wgp_stylus) {
+-			x_max = ts->abs_x_max * 2 - 1;
+-			y_max = ts->abs_y_max * 2 - 1;
++			x_max = ts->abs_x_max * 8 - 1;
++			y_max = ts->abs_y_max * 8 - 1;
+ 		} else {
+ 			x_max = ts->abs_x_max - 1;
+ 			y_max = ts->abs_y_max - 1;
+-- 
+2.51.1
+

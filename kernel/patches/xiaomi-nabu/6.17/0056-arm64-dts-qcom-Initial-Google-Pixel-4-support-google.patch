@@ -1,0 +1,1647 @@
+From beb0e2af2359544c86ca4e2730bf70dde27505f8 Mon Sep 17 00:00:00 2001
+From: Andrew Gigena <mail@andrewgigena.dev>
+Date: Thu, 31 Jul 2025 11:41:20 -0300
+Subject: [PATCH 56/77] arm64: dts: qcom: Initial Google Pixel 4 support
+ (google-flame)
+
+Add initial support for Google Pixel 4 smartphone, based on
+Qualcomm SM8150 (Snapdragon 855) chipset. These series
+adds support for the following features:
+
+    * Regulator configurations for PM8150, PM8150B, PM8150L, and MAX77826
+    * Reserved memories ranges
+    * Framebuffer (simple-framebuffer)
+    * AMOLED panel driver with software-based 60Hz/90Hz refresh rate switching
+    * GPU (fully operational)
+    * Thermal zones
+    * Hardware buttons (power, volume up/down)
+    * Flashlight
+    * USB peripheral mode
+    * UFS storage
+    * Reboot modes (recovery, fastboot, normal)
+    * Battery support (simple-battery and max17201)
+    * Touchscreen support (st,fts)
+    * Bluetooth / WiFi
+
+Signed-off-by: Andrew Gigena <mail@andrewgigena.dev>
+---
+ arch/arm64/boot/dts/qcom/Makefile             |    1 +
+ .../boot/dts/qcom/sm8150-google-flame.dts     | 1566 +++++++++++++++++
+ arch/arm64/configs/sm8150.config              |    9 +
+ 3 files changed, 1576 insertions(+)
+ create mode 100644 arch/arm64/boot/dts/qcom/sm8150-google-flame.dts
+
+diff --git a/arch/arm64/boot/dts/qcom/Makefile b/arch/arm64/boot/dts/qcom/Makefile
+index c3959897d9e2..01bc586700da 100644
+--- a/arch/arm64/boot/dts/qcom/Makefile
++++ b/arch/arm64/boot/dts/qcom/Makefile
+@@ -269,6 +269,7 @@ dtb-$(CONFIG_ARCH_QCOM)	+= sm7125-xiaomi-joyeuse.dtb
+ dtb-$(CONFIG_ARCH_QCOM)	+= sm7225-fairphone-fp4.dtb
+ dtb-$(CONFIG_ARCH_QCOM)	+= sm7325-nothing-spacewar.dtb
+ dtb-$(CONFIG_ARCH_QCOM)	+= sm8150-hdk.dtb
++dtb-$(CONFIG_ARCH_QCOM)	+= sm8150-google-flame.dtb
+ dtb-$(CONFIG_ARCH_QCOM)	+= sm8150-microsoft-surface-duo.dtb
+ dtb-$(CONFIG_ARCH_QCOM)	+= sm8150-mtp.dtb
+ dtb-$(CONFIG_ARCH_QCOM)	+= sm8150-sony-xperia-kumano-bahamut.dtb
+diff --git a/arch/arm64/boot/dts/qcom/sm8150-google-flame.dts b/arch/arm64/boot/dts/qcom/sm8150-google-flame.dts
+new file mode 100644
+index 000000000000..2869435510d7
+--- /dev/null
++++ b/arch/arm64/boot/dts/qcom/sm8150-google-flame.dts
+@@ -0,0 +1,1566 @@
++// SPDX-License-Identifier: BSD-3-Clause
++/*
++* Copyright (c) 2025, andrewgigena <mail@andrewgigena.dev>
++*/
++
++/dts-v1/;
++#include <dt-bindings/regulator/qcom,rpmh-regulator.h>
++#include <dt-bindings/arm/qcom,ids.h>
++#include <dt-bindings/phy/phy.h>
++#include <dt-bindings/input/input.h>
++#include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/usb/pd.h>
++#include <dt-bindings/leds/common.h>
++#include "sm8150.dtsi"
++#include "pm8150.dtsi"
++#include "pm8150b.dtsi"
++#include "pm8150l.dtsi"
++
++
++/*
++* Rewrite reserved memory maps inherited from sm8150.dtsi to match the ones
++* used on google-flame.
++* Note: this list is ordered by its memory address in sm8150.dtsi.
++*/
++/delete-node/ &tz_mem;        		/* address: =, size: > */
++/delete-node/ &adsp_mem;    		/* address: =, size: > */
++/delete-node/ &mpss_mem;    		/* address: >, size: > */
++/delete-node/ &venus_mem;   		/* address: >, size: = */
++/delete-node/ &slpi_mem;    		/* address: >, size: > */
++/delete-node/ &ipa_fw_mem;    		/* address: >, size: = */
++/delete-node/ &ipa_gsi_mem;    		/* address: >, size: = */
++/delete-node/ &gpu_mem;        		/* address: >, size: = */
++/delete-node/ &spss_mem;    		/* address: >, size: = */
++/delete-node/ &cdsp_mem;    		/* address: >, size: = */
++/delete-node/ &qseecom_mem;    		/* address: >, size: = */
++/delete-node/ &rmtfs_mem;			/* address: >, size: = */
++
++
++/ {
++	model = "Google Pixel 4";
++	compatible = "google,floral-sm8150", "qcom,sm8150";
++	qcom,msm-id = <QCOM_ID_SM8150 0x00020000>; /* SM8150 v2.0 */
++	qcom,board-id = <0x00061e05 0x00000000>;
++	
++	aliases {
++		serial0 = &uart2;
++		hsuart0 = &uart13;
++		display0 = &framebuffer0;
++		wifi0 = &wifi;
++	};
++	
++	chosen {
++		#address-cells = <2>;
++		#size-cells = <2>;
++		ranges;
++		stdout-path = "serial0:115200n8";
++		
++		/*
++		* hack: Use framebuffer setup by the bootloader for simplefb.
++		* the address is taken from the bootloader config (strings xbl.img | grep "Display Reserved")
++		*/
++		framebuffer0: framebuffer@9C400000 {
++			compatible = "simple-framebuffer";
++			reg = <0 0x9C400000 0 0x2400000>;
++			width = <1080>;
++			height = <2280>;
++			stride = <(1080 * 4)>;
++			format = "a8r8g8b8";
++		};
++	};
++	
++	thermal-zones {
++		/* PM8150 Thermals */
++		xo-therm {
++			thermal-sensors = <&pm8150_adc_tm 0>;
++			trips {
++				active-config0 {
++					temperature = <125000>;
++					hysteresis = <1000>;
++					type = "passive";
++				};
++			};
++		};
++		
++		quiet-therm {
++			thermal-sensors = <&pm8150_adc_tm 1>;
++			trips {
++				active-config0 {
++					temperature = <125000>;
++					hysteresis = <1000>;
++					type = "passive";
++				};
++			};
++		};
++		
++		pa-therm {
++			thermal-sensors = <&pm8150_adc_tm 2>;
++			trips {
++				active-config0 {
++					temperature = <125000>;
++					hysteresis = <1000>;
++					type = "passive";
++				};
++			};
++		};
++		
++		/* PM8150B Thermals */
++		disp-therm {
++			thermal-sensors = <&pm8150b_adc_tm 0>;
++			trips {
++				active-config0 {
++					temperature = <125000>;
++					hysteresis = <1000>;
++					type = "passive";
++				};
++			};
++		};
++		
++		chg-therm {
++			thermal-sensors = <&pm8150b_adc_tm 1>;
++			trips {
++				active-config0 {
++					temperature = <125000>;
++					hysteresis = <1000>;
++					type = "passive";
++				};
++			};
++		};
++		
++		usbc-therm {
++			thermal-sensors = <&pm8150b_adc_tm 2>;
++			trips {
++				active-config0 {
++					temperature = <125000>;
++					hysteresis = <1000>;
++					type = "passive";
++				};
++			};
++		};
++		
++		/* PM8150L Thermals */
++		rcam-therm {
++			thermal-sensors = <&pm8150l_adc_tm 0>;
++			trips {
++				active-config0 {
++					temperature = <125000>;
++					hysteresis = <1000>;
++					type = "passive";
++				};
++			};
++		};
++		
++		sdm-therm {
++			thermal-sensors = <&pm8150l_adc_tm 1>;
++			trips {
++				active-config0 {
++					temperature = <125000>;
++					hysteresis = <1000>;
++					type = "passive";
++				};
++				shutdown-config {
++					temperature = <63000>;
++					hysteresis = <1000>;
++					type = "critical";
++				};
++			};
++		};
++		
++		sdm-therm-monitor {
++			thermal-sensors = <&pm8150l_adc_tm 1>;
++			trips {
++				active-config0 {
++					temperature = <125000>;
++					hysteresis = <1000>;
++					type = "passive";
++				};
++			};
++		};
++		
++		
++		btn-therm {
++			thermal-sensors = <&pm8150l_adc_tm 2>;
++			trips {
++				active-config0 {
++					temperature = <125000>;
++					hysteresis = <1000>;
++					type = "passive";
++				};
++			};
++		};
++	};
++	
++	gpio-keys {
++		compatible = "gpio-keys";
++		
++		pinctrl-names = "default";
++		pinctrl-0 = <&key_home>, <&key_vol_up>;
++		
++		vol_up {
++			label = "Volume Up";
++			gpios = <&pm8150_gpios 6 GPIO_ACTIVE_LOW>;
++			linux,input-type = <EV_KEY>;
++			linux,code = <KEY_VOLUMEUP>;
++			linux,can-disable;
++			debounce-interval = <15>;
++			wakeup-source;
++		};
++	};
++	
++	reserved-memory {
++		#address-cells = <2>;
++		#size-cells = <2>;
++		ranges;
++		
++		/* hyp_mem */
++		
++		/* xbl_mem */
++		
++		/* aop_mem */
++		
++		/* aop_cmd_db */
++		
++		/* smem_mem */
++		
++		tz_mem: memory@86200000 {
++			reg = <0x0 0x86200000 0x0 0x3f00000>;
++			no-map;
++		};
++		
++		/* camera_mem */
++		
++		/* wlan_mem */
++		
++		/* npu_mem */
++		
++		adsp_mem: memory@8be00000 {
++			reg = <0x0 0x8be00000 0x0 0x1e00000>;
++			no-map;
++		};
++		
++		mpss_mem: memory@8dc00000 {
++			reg = <0x0 0x8dc00000 0x0 0xb400000>;
++			no-map;
++		};
++		
++		venus_mem: memory@99000000 {
++			reg = <0x0 0x99000000 0x0 0x500000>;
++			no-map;
++		};
++		
++		slpi_mem: memory@9ab00000 {
++			reg = <0x0 0x9ab00000 0x0 0x1800000>;
++			no-map;
++		};
++		
++		ipa_fw_mem: memory@9a900000 {
++			reg = <0x0 0x9a900000 0x0 0x10000>;
++			no-map;
++		};
++		
++		ipa_gsi_mem: memory@9a910000 {
++			reg = <0x0 0x9a910000 0x0 0x5000>;
++			no-map;
++		};
++		
++		gpu_mem: memory@9a915000 {
++			reg = <0x0 0x9a915000 0x0 0x2000>;
++			no-map;
++		};
++		
++		spss_mem: memory@9aa00000 {
++			reg = <0x0 0x9aa00000 0x0 0x100000>;
++			no-map;
++		};
++		
++		cdsp_mem: memory@99500000 {
++			reg = <0x0 0x99500000 0x0 0x1400000>;
++			no-map;
++		};
++		
++		qseecom_mem: memory@9e800000 {
++			reg = <0x0 0x9e800000 0x0 0x1400000>;
++			no-map;
++		};
++		
++		framebuffer_mem: memory@9c400000 {
++			reg = <0x0 0x9c400000 0x0 0x2400000>;
++			no-map;
++		};
++		
++		ramoops@a47ff000 {
++			compatible = "ramoops";
++			reg = <0x00000000 0xa47ff000 0x00000000 0x00400000>;
++			record-size = <0x40000>;
++			console-size = <0x40000>;
++			ftrace-size = <0x40000>;
++			pmsg-size = <0x200000>;
++			ecc-size = <0x0>;
++		};
++		
++		/* Downstream dynamically allocates rmtfs_mem region using
++		* dma_alloc_coherent and adds 4k guard pages before and after
++		* it to workaround some "XPU limitation". */
++		rmtfs_lower_guard_mem: memory@f9800000 {
++			no-map;
++			reg = <0x0 0xf9800000 0x0 0x1000>;
++		};
++		
++		/*
++		* The rmtfs memory region in downstream is 'dynamically allocated'
++		* but given the same address every time. Hard code it as this address is
++		* where the modem firmware expects it to be.
++		*/
++		rmtfs_mem: memory@f9801000 {
++			compatible = "qcom,rmtfs-mem";
++			reg = <0x0 0xf9801000 0x0 0x200000>;
++			no-map;
++			
++			qcom,client-id = <1>;
++			qcom,vmid = <15>;
++		};
++		
++		rmtfs_upper_guard_mem: memory@f9a01000 {
++			no-map;
++			reg = <0x0 0xf9a01000 0x0 0x1000>;
++		};
++		
++		pil_faceauth_fw_mem: memory@a8800000 {
++			no-map;
++			reg = <0x0 0xa8800000 0x0 0x4000000>;
++		};
++	};
++	
++	vph_pwr: vph-pwr-regulator {
++		compatible = "regulator-fixed";
++		regulator-name = "vph_pwr";
++		regulator-min-microvolt = <3700000>;
++		regulator-max-microvolt = <3700000>;
++	};
++	
++	battery: battery {
++		compatible = "simple-battery";
++		charge-full-design-microamp-hours = <2800000>;
++		energy-full-design-microwatt-hours = <10780000>;
++		voltage-min-design-microvolt = <3850000>;
++		voltage-max-design-microvolt = <4400000>;
++	};
++};
++
++&apps_rsc {
++	pm8150-rpmh-regulators {
++		compatible = "qcom,pm8150-rpmh-regulators";
++		qcom,pmic-id = "a";
++		
++		vdd-s1-supply = <&vph_pwr>;
++		vdd-s2-supply = <&vph_pwr>;
++		vdd-s3-supply = <&vph_pwr>;
++		vdd-s4-supply = <&vph_pwr>;
++		vdd-s5-supply = <&vph_pwr>;
++		vdd-s6-supply = <&vph_pwr>;
++		vdd-s7-supply = <&vph_pwr>;
++		vdd-s8-supply = <&vph_pwr>;
++		vdd-s9-supply = <&vph_pwr>;
++		vdd-s10-supply = <&vph_pwr>;
++		
++		vdd-l1-l8-l11-supply = <&vreg_s6a_0p9>;
++		vdd-l2-l10-supply = <&vreg_bob>;
++		vdd-l3-l4-l5-l18-supply = <&vreg_s6a_0p9>;
++		vdd-l6-l9-supply = <&vreg_s8c_1p3>;
++		vdd-l7-l12-l14-l15-supply = <&vreg_s5a_2p0>;
++		vdd-l13-l16-l17-supply = <&vreg_bob>;
++		
++		/* s1 - mss.lvl (ARC) */
++		
++		vreg_s2a_0p6: smps2 { /* VRM */
++			regulator-name = "pm8150_s2";
++			regulator-min-microvolt = <600000>;
++			regulator-max-microvolt = <600000>;
++		};
++		
++		/* s3 - ebi.lvl (ARC) */
++		
++		vreg_s4a_1p8: smps4 { /* VRM */
++			regulator-name = "pm8150_s4";
++			regulator-min-microvolt = <1800000>;
++			regulator-max-microvolt = <1800000>;
++			regulator-allow-set-load;
++			regulator-always-on;
++			regulator-boot-on;
++		};
++		
++		vreg_s5a_2p0: smps5 { /* VRM */
++			regulator-name = "pm8150_s5";
++			regulator-min-microvolt = <2040000>;
++			regulator-max-microvolt = <2040000>;
++		};
++		
++		vreg_s6a_0p9: smps6 { /* VRM */
++			regulator-name = "pm8150_s6";
++			regulator-min-microvolt = <920000>;
++			regulator-max-microvolt = <1128000>;
++		};
++		
++		vreg_l1a_0p75: ldo1 { /* VRM */
++			regulator-name = "pm8150_l1";
++			regulator-min-microvolt = <752000>;
++			regulator-max-microvolt = <752000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM RPMH_REGULATOR_MODE_HPM>;
++		};
++		
++		vreg_l2a_3p1: ldo2 { /* VRM */
++			regulator-name = "pm8150_l2";
++			regulator-min-microvolt = <3072000>;
++			regulator-max-microvolt = <3072000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM RPMH_REGULATOR_MODE_HPM>;
++		};
++		
++		vreg_l3a_0p4: ldo3 { /* VRM */
++			regulator-name = "pm8150_l3";
++			regulator-min-microvolt = <480000>;
++			regulator-max-microvolt = <932000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM RPMH_REGULATOR_MODE_HPM>;
++		};
++		
++		/* l4 - lmx.lvl (ARC) */
++		
++		vreg_l5a_0p88: ldo5 { /* VRM */
++			regulator-name = "pm8150_l5";
++			regulator-min-microvolt = <880000>;
++			regulator-max-microvolt = <880000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM RPMH_REGULATOR_MODE_HPM>;
++		};
++		
++		vreg_l6a_1p2: ldo6 { /* VRM */
++			regulator-name = "pm8150_l6";
++			regulator-min-microvolt = <1200000>;
++			regulator-max-microvolt = <1200000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM RPMH_REGULATOR_MODE_HPM>;
++		};
++		
++		vreg_l7a_1p8: ldo7 { /* VRM */
++			regulator-name = "pm8150_l7";
++			regulator-min-microvolt = <1800000>;
++			regulator-max-microvolt = <1800000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM RPMH_REGULATOR_MODE_HPM>;
++		};
++		
++		/* l8 - lcx.lvl (ARC) */
++		
++		vreg_l9a_1p2: ldo9 { /* VRM */
++			regulator-name = "pm8150_l9";
++			regulator-min-microvolt = <1224000>;
++			regulator-max-microvolt = <1224000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_HPM>;
++		};
++		
++		vreg_l10a_2p5: ldo10 { /* VRM */
++			regulator-name = "pm8150_l10";
++			regulator-min-microvolt = <2950000>; // Minimum required for UFS to start correctly
++			regulator-max-microvolt = <2960000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM RPMH_REGULATOR_MODE_HPM>;
++		};
++		
++		vreg_l11a_0p8: ldo11 { /* VRM */
++			regulator-name = "pm8150_l11";
++			regulator-min-microvolt = <808000>;
++			regulator-max-microvolt = <808000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM RPMH_REGULATOR_MODE_HPM>;
++		};
++		
++		vreg_l12a_1p8: ldo12 { /* VRM */
++			regulator-name = "pm8150_l12";
++			regulator-min-microvolt = <1800000>;
++			regulator-max-microvolt = <1800000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM RPMH_REGULATOR_MODE_HPM>;
++		};
++		
++		vreg_l13a_2p7: ldo13 { /* VRM */
++			regulator-name = "pm8150_l13";
++			regulator-min-microvolt = <2704000>;
++			regulator-max-microvolt = <2704000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM RPMH_REGULATOR_MODE_HPM>;
++		};
++		
++		vreg_l14a_1p8: ldo14 { /* VRM */
++			regulator-name = "pm8150_l14";
++			regulator-min-microvolt = <1800000>;
++			regulator-max-microvolt = <1840000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM RPMH_REGULATOR_MODE_HPM>;
++		};
++		
++		vreg_l15a_1p7: ldo15 { /* VRM */
++			regulator-name = "pm8150_l15";
++			regulator-min-microvolt = <1704000>;
++			regulator-max-microvolt = <1704000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM RPMH_REGULATOR_MODE_HPM>;
++		};
++		
++		vreg_l16a_2p7: ldo16 { /* VRM */
++			regulator-name = "pm8150_l16";
++			regulator-min-microvolt = <2704000>;
++			regulator-max-microvolt = <2960000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM RPMH_REGULATOR_MODE_HPM>;
++		};
++		
++		vreg_l17a_3p0: ldo17 { /* VRM */
++			regulator-name = "pm8150_l17";
++			regulator-min-microvolt = <2856000>;
++			regulator-max-microvolt = <3008000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM RPMH_REGULATOR_MODE_HPM>;
++		};
++		
++		vreg_l18a_3p0: ldo18 { /* VRM */
++			regulator-name = "pm8150_l18";
++			regulator-min-microvolt = <880000>;
++			regulator-max-microvolt = <912000>;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM RPMH_REGULATOR_MODE_HPM>;
++		};
++	};
++	
++	pm8150l-rpmh-regulators {
++		compatible = "qcom,pm8150l-rpmh-regulators";
++		qcom,pmic-id = "c";
++		
++		vdd-s1-supply = <&vph_pwr>;
++		vdd-s2-supply = <&vph_pwr>;
++		vdd-s3-supply = <&vph_pwr>;
++		vdd-s4-supply = <&vph_pwr>;
++		vdd-s5-supply = <&vph_pwr>;
++		vdd-s6-supply = <&vph_pwr>;
++		vdd-s7-supply = <&vph_pwr>;
++		vdd-s8-supply = <&vph_pwr>;
++		
++		vdd-l1-l8-supply = <&vreg_s4a_1p8>;
++		vdd-l2-l3-supply = <&vreg_s8c_1p3>;
++		vdd-l4-l5-l6-supply = <&vreg_bob>;
++		vdd-l7-l11-supply = <&vreg_bob>;
++		vdd-l9-l10-supply = <&vreg_bob>;
++		
++		vdd-bob-supply = <&vph_pwr>;
++		vdd-flash-supply = <&vreg_bob>;
++		vdd-rgb-supply = <&vreg_bob>;
++		
++		vreg_bob: bob { /* VRM */
++			regulator-name = "pm8150l_bob";
++			regulator-min-microvolt = <3008000>;
++			regulator-max-microvolt = <4000000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_AUTO>;
++			regulator-allow-bypass;
++		};
++		
++		vreg_s1c_1p1: smps1 { /* VRM */
++			regulator-name = "pm8150l_s1";
++			regulator-min-microvolt = <1128000>;
++			regulator-max-microvolt = <1128000>;
++		};
++		
++		/*
++		* s2 - gfx.lvl (ARC)
++		* s3 is unused
++		* s4 - mx.lvl (ARC)
++		* s5 - mmcx.lvl (ARC)
++		* s6 - cx.lvl (ARC)
++		* s7 is unused
++		*/
++		
++		vreg_s8c_1p3: smps8 { /* VRM */
++			regulator-name = "pm8150l_s8";
++			regulator-min-microvolt = <1352000>;
++			regulator-max-microvolt = <1352000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_RET>;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_RET RPMH_REGULATOR_MODE_AUTO>;
++		};
++		
++		vreg_l1c_1p8: ldo1 { /* XOB */
++			regulator-name = "pm8150l_l1";
++			regulator-min-microvolt = <1800000>;
++			regulator-max-microvolt = <1800000>;
++		};
++		
++		vreg_l2c_1p3: ldo2 { /* VRM */
++			regulator-name = "pm8150l_l2";
++			regulator-min-microvolt = <1304000>;
++			regulator-max-microvolt = <1304000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM RPMH_REGULATOR_MODE_HPM>;
++		};
++		
++		vreg_l3c_1p2: ldo3 { /* VRM */
++			regulator-name = "pm8150l_l3";
++			regulator-min-microvolt = <1200000>;
++			regulator-max-microvolt = <1200000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM RPMH_REGULATOR_MODE_HPM>;
++		};
++		
++		vreg_l4c_1p8: ldo4 { /* VRM */
++			regulator-name = "pm8150l_l4";
++			regulator-min-microvolt = <1704000>;
++			regulator-max-microvolt = <3000000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM RPMH_REGULATOR_MODE_HPM>;
++		};
++		
++		vreg_l5c_1p8: ldo5 { /* VRM */
++			regulator-name = "pm8150l_l5";
++			regulator-min-microvolt = <1704000>;
++			regulator-max-microvolt = <2928000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM RPMH_REGULATOR_MODE_HPM>;
++		};
++		
++		vreg_l6c_2p9: ldo6 { /* VRM */
++			regulator-name = "pm8150l_l6";
++			regulator-min-microvolt = <1800000>;
++			regulator-max-microvolt = <2960000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM RPMH_REGULATOR_MODE_HPM>;
++		};
++		
++		vreg_l7c_3p0: ldo7 { /* VRM */
++			regulator-name = "pm8150l_l7";
++			regulator-min-microvolt = <2856000>;
++			regulator-max-microvolt = <3104000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM RPMH_REGULATOR_MODE_HPM>;
++		};
++		
++		vreg_l8c_1p8: ldo8 { /* XOB */
++			regulator-name = "pm8150l_l8";
++			regulator-min-microvolt = <1800000>;
++			regulator-max-microvolt = <1800000>;
++		};
++		
++		vreg_l9c_2p9: ldo9 { /* VRM */
++			regulator-name = "pm8150l_l9";
++			regulator-min-microvolt = <2704000>;
++			regulator-max-microvolt = <2960000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM RPMH_REGULATOR_MODE_HPM>;
++			status = "disabled"; // Extracted from downstream, but why is it disabled?
++		};
++		
++		vreg_l10c_3p3: ldo10 { /* VRM */
++			regulator-name = "pm8150l_l10";
++			regulator-min-microvolt = <3000000>;
++			regulator-max-microvolt = <3312000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM RPMH_REGULATOR_MODE_HPM>;
++		};
++		
++		vreg_l11c_3p3: ldo11 { /* VRM */
++			regulator-name = "pm8150l_l11";
++			regulator-min-microvolt = <3000000>;
++			regulator-max-microvolt = <3312000>;
++			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
++			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM RPMH_REGULATOR_MODE_HPM>;
++		};
++	};
++	
++	/* PM8009 is not present on these boards, even if downstream sources suggest so. */
++};
++
++&tlmm {
++	gpio-reserved-ranges = <130 1>; /* Ignore this GPIO to make TrustZone and Titan M happy and let up boot */
++	
++	fsa_usbc_ana_en: fsa_usbc_ana_en {
++		mux {
++			pins = "gpio100";
++			function = "gpio";
++		};
++		config {
++			pins = "gpio100";
++			drive-strength = <2>;
++			bias-disable;
++			output-low;
++		};
++	};
++	
++	sde_dsi_active: sde_dsi_active {
++		mux {
++			pins = "gpio67";
++			function = "gpio";
++		};
++		config {
++			pins = "gpio67";
++			drive-strength = <8>;
++			bias-disable;
++		};
++	};
++	
++	sde_dsi_suspend: sde_dsi_suspend {
++		mux {
++			pins = "gpio67";
++			function = "gpio";
++		};
++		config {
++			pins = "gpio67";
++			drive-strength = <2>;
++			bias-pull-down;
++		};
++	};
++	
++	sde_te_active: sde_te_active {
++		mux {
++			pins = "gpio8";
++			function = "mdp_vsync";
++		};
++		config {
++			pins = "gpio8";
++			drive-strength = <2>;
++			bias-pull-down;
++		};
++	};
++	
++	sde_te_suspend: sde_te_suspend {
++		mux {
++			pins = "gpio8";
++			function = "mdp_vsync";
++		};
++		config {
++			pins = "gpio8";
++			drive-strength = <2>;
++			bias-pull-down;
++		};
++	};
++	
++	ts_active_suspend: ts_active_suspend {
++		mux {
++			pins = "gpio122";
++			function = "gpio";
++		};
++		config {
++			pins = "gpio122";
++			drive-strength = <2>;
++			bias-disable;
++		};
++	};
++	
++	qup_uart13_sleep: qup-uart13-sleep {
++		pinmux {
++			pins = "gpio43", "gpio44",
++			"gpio45", "gpio46";
++			function = "gpio";
++		};
++		
++		pinconf-cts {
++			/*
++			* Configure a pull-down on CTS to match the pull of
++			* the Bluetooth module.
++			*/
++			pins = "gpio43";
++			drive-strength = <2>;
++			bias-disable;
++		};
++		
++		pinconf-rts {
++			/*
++			* Configure pull-down on RTS. As RTS is active low
++			* signal, pull it low to indicate the BT SoC that it
++			* can wakeup the system anytime from suspend state by
++			* pulling RX low (by sending wakeup bytes).
++			*/
++			pins = "gpio44";
++			drive-strength = <2>;
++			bias-pull-down;
++		};
++		
++		pinconf-tx {
++			/*
++			* Configure pull-up on TX when it isn't actively driven
++			* to prevent BT SoC from receiving garbage during sleep.
++			*/
++			pins = "gpio45";
++			drive-strength = <2>;
++			bias-pull-up;
++		};
++		
++		pinconf-rx {
++			/*
++			* Configure a pull-up on RX. This is needed to avoid
++			* garbage data when the TX pin of the Bluetooth module
++			* is floating which may cause spurious wakeups.
++			*/
++			pins = "gpio46";
++			drive-strength = <2>;
++			bias-disable;
++		};
++	};
++	
++	cam_sensor_pmic_active: cam_sensor_pmic_active {
++		mux {
++			pins = "gpio102";
++			function = "gpio";
++		};
++		config {
++			pins = "gpio102";
++			bias-pull-up;
++			output-high;
++			drive-strength = <2>;
++		};
++	};
++};
++
++&pm8150_gpios {
++	key_home: key_home {
++		pins = "gpio1";
++		function = "normal";
++		input-enable;
++		bias-pull-up;
++		power-source = <0>;
++	};
++	
++	key_vol_up: key_vol_up {
++		pins = "gpio6";
++		function = "normal";
++		input-enable;
++		bias-pull-up;
++		power-source = <1>;
++	};
++	
++};
++
++&pm8150_adc {
++	channel@4c {
++		reg = <ADC5_XO_THERM_100K_PU>;
++		qcom,ratiometric;
++		qcom,hw-settle-time = <200>;
++		qcom,pre-scaling = <1 1>;
++		label = "xo_therm";
++	};
++	
++	channel@4d {
++		reg = <ADC5_AMUX_THM1_100K_PU>;
++		qcom,ratiometric;
++		qcom,hw-settle-time = <200>;
++		qcom,pre-scaling = <1 1>;
++		label = "quiet_therm";
++	};
++	
++	channel@4e {
++		reg = <ADC5_AMUX_THM2_100K_PU>;
++		qcom,ratiometric;
++		qcom,hw-settle-time = <200>;
++		qcom,pre-scaling = <1 1>;
++		label = "pa_therm";
++	};
++};
++
++&pm8150_adc_tm {
++	status = "okay";
++	
++	xo-therm@0 {
++		reg = <0>;
++		io-channels = <&pm8150_adc ADC5_XO_THERM_100K_PU>;
++		qcom,ratiometric;
++		qcom,hw-settle-time-us = <200>;
++	};
++	
++	quiet-therm@1 {
++		reg = <1>;
++		io-channels = <&pm8150_adc ADC5_AMUX_THM1_100K_PU>;
++		qcom,ratiometric;
++		qcom,hw-settle-time-us = <200>;
++	};
++	
++	pa-therm@2 {
++		reg = <2>;
++		io-channels = <&pm8150_adc ADC5_AMUX_THM2_100K_PU>;
++		qcom,ratiometric;
++		qcom,hw-settle-time-us = <200>;
++	};
++};
++
++&pm8150b_gpios {
++	fg_int_default: fg_int_default {
++		pins = "gpio8";
++		function = "normal";
++		bias-pull-up;
++		input-enable;
++		drive-open-drain;
++		power-source = <0>;
++	};
++};
++
++&pm8150b_adc {
++	channel@7 {
++		reg = <ADC5_USB_IN_I>;
++		qcom,pre-scaling = <1 1>;
++		label = "usb_in_i_uv";
++	};
++	
++	channel@8 {
++		reg = <ADC5_USB_IN_V_16>;
++		qcom,pre-scaling = <1 16>;
++		label = "usb_in_v_div_16";
++	};
++	
++	channel@1e {
++		reg = <ADC5_MID_CHG_DIV6>;
++		qcom,pre-scaling = <1 6>;
++		label = "chg_mid";
++	};
++	
++	channel@b0 {
++		reg = <ADC5_INT_EXT_ISENSE_VBAT_VDATA>;
++		qcom,pre-scaling = <1 1>;
++		label = "v_i_int_vbat_vdata";
++	};
++	
++	channel@b2 {
++		reg = <ADC5_EXT_ISENSE_VBAT_VDATA>;
++		label = "v_i_int_ext_vbat_vdata";
++		qcom,pre-scaling = <1 1>;
++	};
++	
++	channel@b4 {
++		reg = <ADC5_PARALLEL_ISENSE_VBAT_VDATA>;
++		label = "v_i_parallel_vbat_vdata";
++		qcom,pre-scaling = <1 1>;
++	};
++	
++	channel@4d {
++		reg = <ADC5_AMUX_THM1_100K_PU>;
++		qcom,ratiometric;
++		qcom,hw-settle-time = <200>;
++		qcom,pre-scaling = <1 1>;
++		label = "disp_therm";
++	};
++	channel@4e {
++		reg = <ADC5_AMUX_THM2_100K_PU>;
++		qcom,ratiometric;
++		qcom,hw-settle-time = <200>;
++		qcom,pre-scaling = <1 1>;
++		label = "chg_therm";
++	};
++	
++	channel@4f {
++		reg = <ADC5_AMUX_THM3_100K_PU>;
++		qcom,ratiometric;
++		qcom,hw-settle-time = <200>;
++		qcom,pre-scaling = <1 1>;
++		label = "usbc_therm";
++	};
++	
++	channel@99 {
++		reg = <ADC5_SBUx>;
++		qcom,pre-scaling = <1 3>;
++		label = "chg_sbux";
++	};
++};
++
++&pm8150b_adc_tm {
++	status = "okay";
++	
++	disp-therm@0 {
++		reg = <0>;
++		io-channels = <&pm8150b_adc ADC5_AMUX_THM1_100K_PU>;
++		qcom,ratiometric;
++		qcom,hw-settle-time-us = <200>;
++	};
++	
++	chg-therm@1 {
++		reg = <1>;
++		io-channels = <&pm8150b_adc ADC5_AMUX_THM2_100K_PU>;
++		qcom,ratiometric;
++		qcom,hw-settle-time-us = <200>;
++	};
++	
++	usbc-therm@2 {
++		reg = <2>;
++		io-channels = <&pm8150b_adc ADC5_AMUX_THM3_100K_PU>;
++		qcom,ratiometric;
++		qcom,hw-settle-time-us = <200>;
++	};
++};
++
++&pm8150b_fg {
++	status = "okay";
++	monitored-battery = <&battery>;
++};
++
++&pm8150b_vbus {
++	status = "okay";
++};
++
++&pm8150b_typec {
++	status = "okay";
++	vdd-pdphy-supply = <&vreg_l2a_3p1>;
++
++	connector {
++		compatible = "usb-c-connector";
++		
++		power-role = "dual";
++		data-role = "dual";
++		self-powered;
++		
++		source-pdos = <PDO_FIXED(5000, 900,
++		PDO_FIXED_SUSPEND |
++		PDO_FIXED_USB_COMM |
++		PDO_FIXED_DATA_SWAP |
++		PDO_FIXED_DUAL_ROLE)>;
++		
++		sink-pdos = <PDO_FIXED(5000, 3000,
++		PDO_FIXED_USB_COMM |
++		PDO_FIXED_DATA_SWAP |
++		PDO_FIXED_DUAL_ROLE)
++		PDO_FIXED(9000, 2200, 0)>;
++		
++		op-sink-microwatt = <2500000>;
++		
++		sink-vdos = <VDO_IDH(1, 1, IDH_PTYPE_PERIPH, 0,
++		IDH_PTYPE_DFP_HOST, 0, 0x18d1)
++		VDO_CERT(0x0)
++		VDO_PRODUCT(0x4ee1, 0x0)>;
++		
++		ports {
++			#address-cells = <1>;
++			#size-cells = <0>;
++			
++			port@0 {
++				reg = <0>;
++				pm8150b_hs_in: endpoint {
++					remote-endpoint = <&usb_1_dwc3_hs>;
++				};
++			};
++
++			// port@1 {
++			// 	reg = <1>;
++			// 	pm8150b_typec_mux_in: endpoint {
++			// 		remote-endpoint = <&usb_1_qmpphy_out>;
++			// 	};
++			// };
++		};
++	};
++};
++
++&pm8150l_adc {
++	channel@4d {
++		reg = <ADC5_AMUX_THM1_100K_PU>;
++		qcom,ratiometric;
++		qcom,hw-settle-time = <200>;
++		qcom,pre-scaling = <1 1>;
++		label = "rcam_therm";
++	};
++	
++	channel@4e {
++		reg = <ADC5_AMUX_THM2_100K_PU>;
++		qcom,ratiometric;
++		qcom,hw-settle-time = <200>;
++		qcom,pre-scaling = <1 1>;
++		label = "sdm_therm";
++	};
++	
++	channel@4f {
++		reg = <ADC5_AMUX_THM3_100K_PU>;
++		qcom,ratiometric;
++		qcom,hw-settle-time = <200>;
++		qcom,pre-scaling = <1 1>;
++		label = "btn_therm";
++	};
++};
++
++&pm8150l_adc_tm {
++	status = "okay";
++	
++	rcam-therm@0 {
++		reg = <0>;
++		io-channels = <&pm8150l_adc ADC5_AMUX_THM1_100K_PU>;
++		qcom,ratiometric;
++		qcom,hw-settle-time-us = <200>;
++	};
++	
++	sdm-therm@1 {
++		reg = <1>;
++		io-channels = <&pm8150l_adc ADC5_AMUX_THM2_100K_PU>;
++		qcom,ratiometric;
++		qcom,hw-settle-time-us = <200>;
++	};
++	
++	btn-therm@2 {
++		reg = <2>;
++		io-channels = <&pm8150l_adc ADC5_AMUX_THM3_100K_PU>;
++		qcom,ratiometric;
++		qcom,hw-settle-time-us = <200>;
++	};
++};
++
++&pm8150l_flash {
++	status = "okay";
++	
++	led-0 {
++		function = LED_FUNCTION_FLASH;
++		color = <LED_COLOR_ID_YELLOW>;
++		led-sources = <1>;
++		led-max-microamp = <300000>;
++		flash-max-microamp = <1000000>;
++		flash-max-timeout-us = <1280000>;
++		function-enumerator = <0>;
++	};
++	
++	led-1 {
++		function = LED_FUNCTION_FLASH;
++		color = <LED_COLOR_ID_YELLOW>;
++		led-sources = <2>;
++		led-max-microamp = <300000>;
++		flash-max-microamp = <1000000>;
++		flash-max-timeout-us = <1280000>;
++		function-enumerator = <1>;
++	};
++};
++
++
++&usb_1 {
++	status = "okay";
++	/* USB 2.0 only */
++	qcom,select-utmi-as-pipe-clk;
++};
++
++&usb_1_dwc3 {
++	dr_mode = "otg";
++	maximum-speed = "super-speed";
++	usb-role-switch;
++	snps,disable-clk-gating;
++	snps,has-lpm-erratum;
++	snps,hird-threshold = /bits/ 8 <0x10>;
++	snps,ssp-u3-u0-quirk;
++	snps,dis-u1-entry-quirk;
++	snps,dis-u2-entry-quirk;
++	tx-fifo-resize;
++
++
++	/* Remove USB3 phy */
++	phys = <&usb_1_hsphy>;
++	phy-names = "usb2-phy";
++	maximum-speed = "high-speed";
++};
++
++&usb_1_dwc3_hs {
++	remote-endpoint = <&pm8150b_hs_in>;
++};
++
++&usb_1_hsphy {
++	status = "okay";
++	vdda-pll-supply = <&vreg_l5a_0p88>;
++	vdda18-supply = <&vreg_l12a_1p8>;
++	vdda33-supply = <&vreg_l2a_3p1>;
++};
++
++&uart2 {
++	status = "okay";
++};
++
++&uart13 {
++	status = "okay";
++	
++	/delete-property/interrupts;
++	interrupts-extended = <&intc GIC_SPI 585 IRQ_TYPE_LEVEL_HIGH>,
++	<&tlmm 46 IRQ_TYPE_EDGE_FALLING>;
++	
++	pinctrl-names = "default", "sleep";
++	pinctrl-1 = <&qup_uart13_sleep>;
++	
++	bluetooth: bluetooth {
++		status = "okay";
++		compatible = "qcom,wcn3990-bt";
++
++		vddio-supply = <&vreg_l1a_0p75>;
++		vddxo-supply = <&vreg_l7a_1p8>;
++		vddrf-supply = <&vreg_l2c_1p3>;
++		vddch0-supply = <&vreg_l11c_3p3>;
++		max-speed = <3200000>;
++	};
++};
++
++&qupv3_id_0 {
++	status = "okay";
++};
++
++&qupv3_id_1 {
++	status = "okay";
++};
++
++&qupv3_id_2 {
++	status = "okay";
++};
++
++&gpi_dma0 {
++	status = "okay";
++};
++
++&gpi_dma1 {
++	status = "okay";
++};
++
++&gpi_dma2 {
++	status = "okay";
++};
++
++&pon {
++	mode-bootloader = <0x2>;
++	mode-recovery = <0x1>;
++};
++
++&pon_pwrkey {
++	status = "okay";
++};
++
++&pon_resin {
++	linux,code = <KEY_VOLUMEDOWN>;
++	status = "okay";
++};
++
++&mdss {
++	status = "okay";
++};
++
++&mdss_dsi0 {
++	status = "okay";
++	vdda-supply = <&vreg_l3c_1p2>;
++	
++	panel@0 {
++		compatible = "lg,nt37280-lh568wf3-ed01";
++		reg = <0>;
++		
++		vddio-supply = <&vreg_l14a_1p8>;
++		vci-supply = <&vreg_l4c_1p8>;
++		
++		reset-gpios = <&tlmm 67 GPIO_ACTIVE_LOW>;
++		
++		pinctrl-names = "panel_active";
++		pinctrl-0 = <&sde_dsi_active &sde_te_active>;
++		pinctrl-1 = <&sde_dsi_suspend &sde_te_suspend>;
++		
++		port {
++			panel_in: endpoint {
++				remote-endpoint = <&mdss_dsi0_out>;
++			};
++		};
++	};
++};
++
++&mdss_dsi0_out {
++	status = "okay";
++	data-lanes = <0 1 2 3>;
++	remote-endpoint = <&panel_in>;
++};
++
++&mdss_dsi0_phy {
++	status = "okay";
++	vdds-supply = <&vreg_l5a_0p88>;
++};
++
++&mdss_mdp {
++	status = "okay";
++};
++
++&gmu {
++	status = "okay";
++};
++
++&gpu {
++	status = "okay";
++	
++	zap-shader {
++		firmware-name = "qcom/sm8150/google/flame/a640_zap.mbn";
++	};
++};
++
++&i2c0 {
++	status = "okay";
++	clock-frequency = <400000>;
++	/* Renesas IDTP9221 Qi charger (idt,p9221) @ 0 */
++};
++
++&spi4 {
++	status = "okay";
++	
++	touchscreen: touchscreen@0 {
++		status = "okay";
++		compatible = "st,fts";
++		spi-max-frequency = <10000000>;
++
++		reg = <0>;
++		interrupt-parent = <&tlmm>;
++		interrupts = <122 IRQ_TYPE_LEVEL_LOW>;
++		vdd-supply = <&vreg_l14a_1p8>;
++		avdd-supply = <&vreg_l17a_3p0>;
++
++		pinctrl-names = "default", "sleep";
++		pinctrl-0 = <&ts_active_suspend>;
++		pinctrl-1 = <&ts_active_suspend>;
++
++		st,irq-gpio = <&tlmm 122 GPIO_ACTIVE_HIGH>;
++		st,reset-gpio = <&tlmm 127 GPIO_ACTIVE_HIGH>;
++		st,switch_gpio = <&tlmm 126 GPIO_ACTIVE_HIGH>;
++		st,disp-rate-gpio = <&tlmm 128 GPIO_ACTIVE_HIGH>;
++		st,regulator_dvdd = "vdd";
++		st,regulator_avdd = "avdd";
++		st,max-coords = <1079 2279>;
++	};
++};
++
++&spi6 {
++	status = "okay";
++	/* google,citadel @ 0 */
++};
++
++&i2c7 {
++	status = "okay";
++	clock-frequency = <400000>;
++	
++	max17201: fuel-gauge@36 {
++		compatible = "maxim,max17201";
++		reg = <0x36>, <0xb>;
++		reg-names = "m5", "nvmem";
++		
++		pinctrl-names = "default";
++		pinctrl-0 = <&fg_int_default>;
++		
++		interrupt-parent = <&spmi_bus>;
++		interrupts = <0x2 0xc7 0x0 IRQ_TYPE_LEVEL_LOW>;
++	};
++};
++
++&spi8 {
++	status = "okay";
++	/* st,st54j_se @ 0 */
++};
++
++&i2c9 {
++	status = "okay";
++	clock-frequency = <400000>;
++	
++	/* st,st21nfc @ 8 */
++
++	max77826: pmic@60 {
++		compatible = "maxim,max77826";
++		status = "okay";
++		reg = <0x60>;
++		
++		pinctrl-names = "cam_pmic_en";
++		pinctrl-0 = <&cam_sensor_pmic_active>;
++		
++		maxim,enable-gpio = <&tlmm 102 GPIO_ACTIVE_HIGH>;
++		
++		regulators {
++			max77826_ldo1: LDO1 {
++				regulator-name = "max77826_ldo1";
++				regulator-min-microvolt = <600000>;
++				regulator-max-microvolt = <2187500>;
++			};
++			
++			max77826_ldo2: LDO2 {
++				regulator-name = "max77826_ldo2";
++				regulator-min-microvolt = <600000>;
++				regulator-max-microvolt = <2187500>;
++			};
++			
++			max77826_ldo3: LDO3 {
++				regulator-name = "max77826_ldo3";
++				regulator-min-microvolt = <600000>;
++				regulator-max-microvolt = <2187500>;
++			};
++			
++			max77826_ldo4: LDO4 {
++				regulator-name = "max77826_ldo4";
++				regulator-min-microvolt = <800000>;
++				regulator-max-microvolt = <3975000>;
++			};
++			
++			max77826_ldo5: LDO5 {
++				regulator-name = "max77826_ldo5";
++				regulator-min-microvolt = <800000>;
++				regulator-max-microvolt = <3975000>;
++			};
++			
++			max77826_ldo6: LDO6 {
++				regulator-name = "max77826_ldo6";
++				regulator-min-microvolt = <800000>;
++				regulator-max-microvolt = <3975000>;
++			};
++			
++			max77826_ldo7: LDO7 {
++				regulator-name = "max77826_ldo7";
++				regulator-min-microvolt = <800000>;
++				regulator-max-microvolt = <3975000>;
++			};
++			
++			max77826_ldo8: LDO8 {
++				regulator-name = "max77826_ldo8";
++				regulator-min-microvolt = <800000>;
++				regulator-max-microvolt = <3975000>;
++			};
++			
++			max77826_ldo9: LDO9 {
++				regulator-name = "max77826_ldo9";
++				regulator-min-microvolt = <800000>;
++				regulator-max-microvolt = <3975000>;
++			};
++			
++			max77826_ldo10: LDO10 {
++				regulator-name = "max77826_ldo10";
++				regulator-min-microvolt = <800000>;
++				regulator-max-microvolt = <3975000>;
++			};
++			
++			max77826_ldo11: LDO11 {
++				regulator-name = "max77826_ldo11";
++				regulator-min-microvolt = <800000>;
++				regulator-max-microvolt = <3975000>;
++			};
++			
++			max77826_ldo12: LDO12 {
++				regulator-name = "max77826_ldo12";
++				regulator-min-microvolt = <800000>;
++				regulator-max-microvolt = <3975000>;
++			};
++			
++			max77826_ldo13: LDO13 {
++				regulator-name = "max77826_ldo13";
++				regulator-min-microvolt = <800000>;
++				regulator-max-microvolt = <3975000>;
++			};
++			
++			max77826_ldo14: LDO14 {
++				regulator-name = "max77826_ldo14";
++				regulator-min-microvolt = <800000>;
++				regulator-max-microvolt = <3975000>;
++			};
++			
++			max77826_ldo15: LDO15 {
++				regulator-name = "max77826_ldo15";
++				regulator-min-microvolt = <800000>;
++				regulator-max-microvolt = <3975000>;
++			};
++			
++			max77826_buck: BUCK {
++				regulator-name = "max77826_buck";
++				regulator-min-microvolt = <500000>;
++				regulator-max-microvolt = <1800000>;
++			};
++			
++			max77826_buckboost: BUCKBOOST {
++				regulator-name = "max77826_buckboost";
++				regulator-min-microvolt = <2600000>;
++				regulator-max-microvolt = <4187500>;
++			};
++		};
++	};
++};
++
++&spi10 {
++	status = "okay";
++	/* abc,airbrush-spi @ 0 */
++};
++
++&spi11 {
++	status = "okay";
++	/* knowles,iaxxx-spi @ 0 */
++};
++
++&i2c15{
++	status = "okay";
++	clock-frequency = <100000>;
++	/* cirrus,cs35l36 @ 40 */
++	/* cirrus,cs35l36 @ 41 */
++	/* cirrus,cs40l25a @ 43 */
++};
++
++&i2c18 {
++	status = "okay";
++	clock-frequency = <100000>;
++	/* samsung,s2mpg01 @ 66 */
++};
++
++&ufs_mem_hc {
++	/* SK Hynix H28U72301CMR (64GB, UFS2.1)
++	*
++	* Operating Voltage Range (from datasheet):
++	* - Vcc (NAND) : 2.7V ~ 3.6V
++	* - VCCQ (CTRL) : Not Used
++	* - VCCQ2 (CTRL) : 1.7V ~ 1.95V
++	*
++	*/
++	status = "okay";
++	
++	reset-gpios = <&tlmm 175 GPIO_ACTIVE_LOW>;
++	
++	vcc-supply = <&vreg_l10a_2p5>;
++	vccq2-supply = <&vreg_s4a_1p8>;
++	
++	vcc-max-microamp = <750000>;
++	vccq2-max-microamp = <750000>;
++};
++
++&ufs_mem_phy {
++	status = "okay";
++	
++	vdda-phy-supply = <&vreg_l5a_0p88>;
++	vdda-phy-max-microamp = <90200>;
++	vdda-pll-supply = <&vreg_l3c_1p2>;
++	vdda-pll-max-microamp = <19000>;
++};
++
++&remoteproc_adsp {
++	status = "okay";
++	firmware-name = "qcom/sm8150/google/flame/adsp.mdt";
++};
++
++&remoteproc_cdsp {
++	status = "okay";
++	firmware-name = "qcom/sm8150/google/flame/cdsp.mdt";
++};
++
++&remoteproc_mpss {
++	status = "okay";
++	firmware-name = "qcom/sm8150/google/flame/modem.mdt";
++};
++
++&wifi {
++	status = "okay";
++	vdd-0.8-cx-mx-supply = <&vreg_l1a_0p75>;
++	vdd-1.8-xo-supply = <&vreg_l7a_1p8>;
++	vdd-1.3-rfa-supply = <&vreg_l2c_1p3>;
++	vdd-3.3-ch0-supply = <&vreg_l11c_3p3>;
++};
++
++
++/* Everything below here is partially/fully broken */
++&remoteproc_slpi {
++	status = "disabled";
++	firmware-name = "qcom/sm8150/google/flame/slpi.mdt";
++};
++
++// &&remoteproc_venus {
++// 	firmware-name = "qcom/sm8150/google/flame/venus.mdt";
++// 	status = "disabled";
++// };
++
++// When enabled the kernel crash
++// &usb_1_qmpphy {
++// 	status = "okay";
++// 	orientation-switch;
++// 	vdda-phy-supply = <&vreg_l3c_1p2>;
++// 	vdda-pll-supply = <&vreg_l5a_0p88>;
++// };
++
++// &usb_1_qmpphy_out {
++// 	remote-endpoint = <&pm8150b_typec_mux_in>;
++// };
+diff --git a/arch/arm64/configs/sm8150.config b/arch/arm64/configs/sm8150.config
+index fc7fb6546344..07beb1f97ae4 100644
+--- a/arch/arm64/configs/sm8150.config
++++ b/arch/arm64/configs/sm8150.config
+@@ -19,6 +19,14 @@ CONFIG_NFC_NXP_NCI_I2C=m
+ # Oneplus 7 Pro
+ CONFIG_TOUCHSCREEN_S6SY761=m
+ 
++# Google Pixel 4
++CONFIG_EFI_ZBOOT=y
++CONFIG_REGULATOR_MAX77826=y
++CONFIG_BATTERY_MAX1720X=y
++CONFIG_DRM_PANEL_LG_NT37280_LH568WF3_ED01=y
++CONFIG_TOUCHSCREEN_STM_FTS_DOWNSTREAM=y
++CONFIG_TOUCHSCREEN_STM_FTS_DOWNSTREAM_SPI=y
++
+ # SOC
+ CONFIG_FORCE_NR_CPUS=y
+ CONFIG_NR_CPUS=8
+@@ -47,6 +55,7 @@ CONFIG_SM_VIDEOCC_8150=y
+ CONFIG_INTERCONNECT_QCOM_OSM_L3=y
+ CONFIG_INTERCONNECT_QCOM_SM8150=y
+ CONFIG_SND_SOC_SM8150=m
++CONFIG_REGULATOR_QCOM_REFGEN=y
+ 
+ # Notification LED
+ # Must be builtin as it won't be automatically modprobed
+-- 
+2.51.1
+

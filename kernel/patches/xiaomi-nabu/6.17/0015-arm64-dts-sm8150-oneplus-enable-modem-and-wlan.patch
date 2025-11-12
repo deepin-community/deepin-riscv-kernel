@@ -1,0 +1,100 @@
+From 8003c0ec21628c4852de2da29ffcaf441fdc6855 Mon Sep 17 00:00:00 2001
+From: Caleb Connolly <caleb@connolly.tech>
+Date: Fri, 5 Mar 2021 18:39:48 +0000
+Subject: [PATCH 15/77] arm64: dts: sm8150-oneplus: enable modem and wlan
+
+---
+ .../boot/dts/qcom/sm8150-oneplus-common.dtsi  | 43 ++++++++++---------
+ 1 file changed, 22 insertions(+), 21 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/sm8150-oneplus-common.dtsi b/arch/arm64/boot/dts/qcom/sm8150-oneplus-common.dtsi
+index f93daaf0a434..2fee2525a082 100644
+--- a/arch/arm64/boot/dts/qcom/sm8150-oneplus-common.dtsi
++++ b/arch/arm64/boot/dts/qcom/sm8150-oneplus-common.dtsi
+@@ -1,6 +1,7 @@
+ // SPDX-License-Identifier: BSD-3-Clause
+ /*
+  * Copyright (c) 2020, The Linux Foundation. All rights reserved.
++ * Copyright (c) 2021, Caleb Connolly <caleb@connolly.tech>
+  */
+ 
+ /dts-v1/;
+@@ -76,6 +77,17 @@ &cdsp_mem {
+ 	reg = <0x0 0x98d00000 0x0 0x1400000>;
+ };
+ 
++// Just like the OnePlus 6, the OnePlus 7 puts this in a weird spot
++// Again it's left up to the driver to allocate this, it always allocates
++// it here.
++&rmtfs_mem {
++	reg = <0x0 0xf2901000 0x0 0x200000>;
++};
++
++&gpu {
++	status = "disabled";
++};
++
+ &apps_rsc {
+ 	pm8150-rpmh-regulators {
+ 		compatible = "qcom,pm8150-rpmh-regulators";
+@@ -405,12 +417,14 @@ &remoteproc_slpi {
+ 	status = "disabled";
+ };
+ 
+-&tlmm {
+-	gpio-reserved-ranges = <0 4>, <126 4>;
++&remoteproc_mpss {
++	status = "okay";
++	firmware-name = "qcom/sm8150/oneplus7/modem.mdt";
+ };
+ 
+-&uart2 {
+-	status = "okay";
++// Some of these might be guacamole specific
++&tlmm {
++	gpio-reserved-ranges = <0 4>, <126 4>;
+ };
+ 
+ &ufs_mem_hc {
+@@ -442,33 +456,20 @@ &usb_1_hsphy {
+ 	vdda18-supply = <&vdda_usb_hs_1p8>;
+ };
+ 
+-//&usb_2_hsphy {
+-// 	status = "okay";
+-// 	vdda-pll-supply = <&vdd_usb_hs_core>;
+-// 	vdda33-supply = <&vdda_usb_hs_3p1>;
+-// 	vdda18-supply = <&vdda_usb_hs_1p8>;
+-// };
+-
+ &usb_1_qmpphy {
+ 	status = "okay";
+ 	vdda-phy-supply = <&vreg_l3c_1p2>;
+ 	vdda-pll-supply = <&vdda_usb_ss_dp_core_1>;
+ };
+ 
+-//&usb_2_qmpphy {
+-// 	status = "okay";
+-// 	vdda-phy-supply = <&vreg_l3c_1p2>;
+-// 	vdda-pll-supply = <&vdda_usb_ss_dp_core_1>;
+-// };
+-
+ &usb_1 {
+ 	status = "okay";
+ };
+ 
+-//&usb_2 {
+-// 	status = "okay";
+-// };
+-
+ &usb_1_dwc3 {
+ 	dr_mode = "peripheral";
++};
++
++&wifi {
++	status = "okay";
+ };
+\ No newline at end of file
+-- 
+2.51.1
+

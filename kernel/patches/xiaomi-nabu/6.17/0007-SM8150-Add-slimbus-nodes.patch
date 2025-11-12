@@ -1,0 +1,49 @@
+From 00257df7681b24d4203e46833c82640d95689429 Mon Sep 17 00:00:00 2001
+From: map220v <map220v300@gmail.com>
+Date: Fri, 4 Aug 2023 01:34:06 +0300
+Subject: [PATCH 07/77] SM8150: Add slimbus nodes
+
+---
+ arch/arm64/boot/dts/qcom/sm8150.dtsi | 26 ++++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/sm8150.dtsi b/arch/arm64/boot/dts/qcom/sm8150.dtsi
+index e5413c8151ba..33466a03c78b 100644
+--- a/arch/arm64/boot/dts/qcom/sm8150.dtsi
++++ b/arch/arm64/boot/dts/qcom/sm8150.dtsi
+@@ -4304,6 +4304,32 @@ apps_smmu: iommu@15000000 {
+ 			dma-coherent;
+ 		};
+ 
++		slimbam: dma-controller@17184000 {
++			compatible = "qcom,bam-v1.7.4", "qcom,bam-v1.7.0";
++			qcom,controlled-remotely;
++			reg = <0 0x17184000 0 0x2c000>;
++			num-channels = <31>;
++			interrupts = <GIC_SPI 164 IRQ_TYPE_LEVEL_HIGH>;
++			#dma-cells = <1>;
++			qcom,ee = <1>;
++			qcom,num-ees = <2>;
++			iommus = <&apps_smmu 0x1b46 0x0>;
++		};
++
++		slim: slim-ngd@171c0000 {
++			compatible = "qcom,slim-ngd-v2.1.0";
++			reg = <0 0x171c0000 0 0x2c000>;
++			interrupts = <GIC_SPI 163 IRQ_TYPE_LEVEL_HIGH>;
++
++			dmas = <&slimbam 3>, <&slimbam 4>;
++			dma-names = "rx", "tx";
++
++			iommus = <&apps_smmu 0x1b46 0x0>;
++			#address-cells = <1>;
++			#size-cells = <0>;
++			status = "disabled";
++		};
++
+ 		remoteproc_adsp: remoteproc@17300000 {
+ 			compatible = "qcom,sm8150-adsp-pas";
+ 			reg = <0x0 0x17300000 0x0 0x4040>;
+-- 
+2.51.1
+

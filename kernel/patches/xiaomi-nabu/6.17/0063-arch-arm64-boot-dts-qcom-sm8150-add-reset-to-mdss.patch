@@ -1,0 +1,25 @@
+From 972944d11f78d4cf6d795abefa2c9e5998f26c21 Mon Sep 17 00:00:00 2001
+From: Nicola Guerrera <guerrera.nicola@gmail.com>
+Date: Mon, 6 Oct 2025 16:47:06 +0200
+Subject: [PATCH 63/77] arch: arm64: boot: dts: qcom: sm8150 add reset to mdss
+
+---
+ arch/arm64/boot/dts/qcom/sm8150.dtsi | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/sm8150.dtsi b/arch/arm64/boot/dts/qcom/sm8150.dtsi
+index 5c6a2a2ca600..4c9b7355179c 100644
+--- a/arch/arm64/boot/dts/qcom/sm8150.dtsi
++++ b/arch/arm64/boot/dts/qcom/sm8150.dtsi
+@@ -3829,6 +3829,8 @@ mdss: display-subsystem@ae00000 {
+ 
+ 			iommus = <&apps_smmu 0x800 0x420>;
+ 
++			resets = <&gcc DISP_CC_MDSS_CORE_BCR>;
++
+ 			status = "disabled";
+ 
+ 			#address-cells = <2>;
+-- 
+2.51.1
+

@@ -1,0 +1,87 @@
+From 4ce6db24eac2923997dc2d91ca2ccb12631cbf85 Mon Sep 17 00:00:00 2001
+From: Andrew Gigena <mail@andrewgigena.dev>
+Date: Tue, 22 Jul 2025 06:49:00 -0300
+Subject: [PATCH 50/77] arm64: dts: qcom: pm8150*: add vph_pwr and vcoin ADC
+ channels
+
+Add VPH_PWR and VCOIN ADC channels to PMIC device tree nodes:
+- For PM8150: add both vph_pwr and vcoin
+- For PM8150B: add both vph_pwr and vcoin
+- For PM8150L: add vph_pwr only
+
+These channels are used for monitoring system voltages (main power rail
+and coin cell battery when present).
+
+Signed-off-by: Andrew Gigena <mail@andrewgigena.dev>
+---
+ arch/arm64/boot/dts/qcom/pm8150.dtsi  | 12 ++++++++++++
+ arch/arm64/boot/dts/qcom/pm8150b.dtsi | 12 ++++++++++++
+ arch/arm64/boot/dts/qcom/pm8150l.dtsi |  6 ++++++
+ 3 files changed, 30 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/pm8150.dtsi b/arch/arm64/boot/dts/qcom/pm8150.dtsi
+index c3411b308e3d..18dfe2a5d3d1 100644
+--- a/arch/arm64/boot/dts/qcom/pm8150.dtsi
++++ b/arch/arm64/boot/dts/qcom/pm8150.dtsi
+@@ -104,6 +104,18 @@ channel@6 {
+ 				qcom,pre-scaling = <1 1>;
+ 				label = "die_temp";
+ 			};
++
++			channel@83 {
++				reg = <ADC5_VPH_PWR>;
++				qcom,pre-scaling = <1 3>;
++				label = "vph_pwr";
++			};
++
++			channel@85 {
++				reg = <ADC5_VCOIN>;
++				qcom,pre-scaling = <1 3>;
++				label = "vcoin";
++			};
+ 		};
+ 
+ 		pm8150_adc_tm: adc-tm@3500 {
+diff --git a/arch/arm64/boot/dts/qcom/pm8150b.dtsi b/arch/arm64/boot/dts/qcom/pm8150b.dtsi
+index b7c3452aee48..4a6797bf8f9c 100644
+--- a/arch/arm64/boot/dts/qcom/pm8150b.dtsi
++++ b/arch/arm64/boot/dts/qcom/pm8150b.dtsi
+@@ -170,6 +170,18 @@ channel@9 {
+ 				qcom,pre-scaling = <1 1>;
+ 				label = "chg_temp";
+ 			};
++
++			channel@83 {
++				reg = <ADC5_VPH_PWR>;
++				qcom,pre-scaling = <1 3>;
++				label = "vph_pwr";
++			};
++
++			channel@85 {
++				reg = <ADC5_VCOIN>;
++				qcom,pre-scaling = <1 3>;
++				label = "vcoin";
++			};
+ 		};
+ 
+ 		pm8150b_adc_tm: adc-tm@3500 {
+diff --git a/arch/arm64/boot/dts/qcom/pm8150l.dtsi b/arch/arm64/boot/dts/qcom/pm8150l.dtsi
+index 3911d6d0d2e2..a678f0058b08 100644
+--- a/arch/arm64/boot/dts/qcom/pm8150l.dtsi
++++ b/arch/arm64/boot/dts/qcom/pm8150l.dtsi
+@@ -86,6 +86,12 @@ channel@6 {
+ 				qcom,pre-scaling = <1 1>;
+ 				label = "die_temp";
+ 			};
++
++			channel@83 {
++				reg = <ADC5_VPH_PWR>;
++				qcom,pre-scaling = <1 3>;
++				label = "vph_pwr";
++			};
+ 		};
+ 
+ 		pm8150l_adc_tm: adc-tm@3500 {
+-- 
+2.51.1
+

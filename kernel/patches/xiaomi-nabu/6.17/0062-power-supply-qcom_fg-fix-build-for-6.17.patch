@@ -1,0 +1,33 @@
+From a4313cdf124bed4bf2582fc26b041d2e76af797b Mon Sep 17 00:00:00 2001
+From: panpanpanpan <panjeoc@proton.me>
+Date: Sat, 4 Oct 2025 09:07:58 -0500
+Subject: [PATCH 62/77] power: supply: qcom_fg: fix build for 6.17
+
+---
+ drivers/power/supply/qcom_fg.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/power/supply/qcom_fg.c b/drivers/power/supply/qcom_fg.c
+index bb8294f4a684..1282d9519ea8 100644
+--- a/drivers/power/supply/qcom_fg.c
++++ b/drivers/power/supply/qcom_fg.c
+@@ -1222,7 +1222,6 @@ static int qcom_fg_probe(struct platform_device *pdev)
+ 	}
+ 
+ 	supply_config.drv_data = chip;
+-	supply_config.of_node = pdev->dev.of_node;
+ 
+ 	chip->batt_psy = devm_power_supply_register(chip->dev, &batt_psy_desc,
+ 						    &supply_config);
+@@ -1327,7 +1326,7 @@ static int qcom_fg_probe(struct platform_device *pdev)
+ 	}
+ 
+ 	/* Optional: Get charger power supply for status checking */
+-	chip->chg_psy = power_supply_get_by_phandle(chip->dev->of_node,
++	chip->chg_psy = power_supply_get_by_reference(dev_fwnode(chip->dev),
+ 						    "power-supplies");
+ 	if (IS_ERR(chip->chg_psy)) {
+ 		ret = PTR_ERR(chip->chg_psy);
+-- 
+2.51.1
+

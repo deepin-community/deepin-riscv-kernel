@@ -1,0 +1,39 @@
+From 68451b5d1eee2edba6d35f611bdf1c873bd49efd Mon Sep 17 00:00:00 2001
+From: Piyush Raj Chouhan <piyushchouhan1598@gmail.com>
+Date: Tue, 9 Sep 2025 21:47:52 +0530
+Subject: [PATCH 68/77] Add EFI.config and add raphael to sm8150.config
+
+---
+ arch/arm64/configs/efi.config    | 3 +++
+ arch/arm64/configs/sm8150.config | 5 +++++
+ 2 files changed, 8 insertions(+)
+ create mode 100644 arch/arm64/configs/efi.config
+
+diff --git a/arch/arm64/configs/efi.config b/arch/arm64/configs/efi.config
+new file mode 100644
+index 000000000000..b715a302d615
+--- /dev/null
++++ b/arch/arm64/configs/efi.config
+@@ -0,0 +1,3 @@
++CONFIG_EFI_ZBOOT=y
++CONFIG_FB_EFI=n
++CONFIG_NLS_ASCII=y
+diff --git a/arch/arm64/configs/sm8150.config b/arch/arm64/configs/sm8150.config
+index e61ea0ba3725..aa0f51803af8 100644
+--- a/arch/arm64/configs/sm8150.config
++++ b/arch/arm64/configs/sm8150.config
+@@ -1,6 +1,11 @@
+ # Qualcomm Snapdragon 855/855+/860 (SM8150/SM8150-AC/SM8150-AD) config fragment
+ CONFIG_LOCALVERSION="-sm8150"
+ 
++# Xiaomi Redmi K20 Pro
++CONFIG_DRM_PANEL_SAMSUNG_AMS639RQ08=m
++CONFIG_SND_SOC_TFA9872=m
++CONFIG_TOUCHSCREEN_GOODIX_GTX8=m
++
+ # Xiaomi Pad 5
+ CONFIG_DRM_PANEL_NOVATEK_NT36523=m
+ CONFIG_BACKLIGHT_KTZ8866=m
+-- 
+2.51.1
+

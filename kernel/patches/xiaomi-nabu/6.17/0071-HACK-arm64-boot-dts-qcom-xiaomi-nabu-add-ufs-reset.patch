@@ -1,0 +1,27 @@
+From f02c235afd3ab2db2ec454465ba697e9e5fab2dc Mon Sep 17 00:00:00 2001
+From: Nicola Guerrera <guerrera.nicola@gmail.com>
+Date: Mon, 20 Oct 2025 20:48:56 +0200
+Subject: [PATCH 71/77] HACK: arm64: boot: dts: qcom: xiaomi-nabu: add ufs
+ reset
+
+We don't know if this is the correct gpio, but it does seem to make a small difference, also gets rid of missing ufs reset errors in uboot.
+---
+ arch/arm64/boot/dts/qcom/sm8150-xiaomi-nabu.dts | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/sm8150-xiaomi-nabu.dts b/arch/arm64/boot/dts/qcom/sm8150-xiaomi-nabu.dts
+index 3a2e7ce9dc16..9adf4f00254b 100644
+--- a/arch/arm64/boot/dts/qcom/sm8150-xiaomi-nabu.dts
++++ b/arch/arm64/boot/dts/qcom/sm8150-xiaomi-nabu.dts
+@@ -1022,6 +1022,8 @@ bluetooth: bluetooth {
+ &ufs_mem_hc {
+ 	status = "okay";
+ 
++	reset-gpios = <&tlmm 175 GPIO_ACTIVE_LOW>;
++
+ 	vcc-supply = <&vreg_l10a_2p5>;
+ 	vcc-max-microamp = <750000>;
+ 	vccq-supply = <&vreg_l9a_1p2>;
+-- 
+2.51.1
+

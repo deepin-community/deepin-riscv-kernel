@@ -1,0 +1,47 @@
+From 8ad2ba26ac8a3ddc386575b7c937b99003f7a765 Mon Sep 17 00:00:00 2001
+From: Nicola Guerrera <guerrera.nicola@gmail.com>
+Date: Tue, 5 Aug 2025 18:38:27 +0200
+Subject: [PATCH 46/77] defconfig: sm8150: add smbx and compressed fw loader
+
+---
+ arch/arm64/configs/sm8150.config | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm64/configs/sm8150.config b/arch/arm64/configs/sm8150.config
+index 2f21ca561e2b..fc7fb6546344 100644
+--- a/arch/arm64/configs/sm8150.config
++++ b/arch/arm64/configs/sm8150.config
+@@ -2,8 +2,8 @@
+ CONFIG_LOCALVERSION="-sm8150"
+ 
+ # Xiaomi Pad 5
+-CONFIG_DRM_PANEL_NOVATEK_NT36523=y
+-CONFIG_BACKLIGHT_KTZ8866=y
++CONFIG_DRM_PANEL_NOVATEK_NT36523=m
++CONFIG_BACKLIGHT_KTZ8866=m
+ CONFIG_TOUCHSCREEN_NT36523_SPI=m
+ CONFIG_SND_SOC_CS35L41_I2C=m
+ 
+@@ -68,6 +68,7 @@ CONFIG_REMOTEPROC_CDEV=y
+ 
+ # Battery
+ CONFIG_BATTERY_QCOM_FG=y
++CONFIG_CHARGER_QCOM_SMB2=y
+ 
+ # Graphics
+ CONFIG_DRM=y
+@@ -296,6 +297,11 @@ CONFIG_HID_SONY=m
+ CONFIG_SONY_FF=y
+ CONFIG_HID_NINTENDO=m
+ 
++# Support loading compressed firmware
++CONFIG_FW_LOADER_COMPRESS=y
++CONFIG_FW_LOADER_COMPRESS_XZ=y
++CONFIG_FW_LOADER_COMPRESS_ZSTD=y
++
+ # Disable all unrelated stuffs afaik
+ CONFIG_HIBERNATION=n
+ CONFIG_FW_LOADER_USER_HELPER=n
+-- 
+2.51.1
+

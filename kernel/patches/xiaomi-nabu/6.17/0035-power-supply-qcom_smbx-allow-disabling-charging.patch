@@ -1,0 +1,39 @@
+From c75db0a72c75f25d43043f615faf25ed569c21c4 Mon Sep 17 00:00:00 2001
+From: Casey Connolly <casey.connolly@linaro.org>
+Date: Thu, 19 Jun 2025 16:55:13 +0200
+Subject: [PATCH 35/77] power: supply: qcom_smbx: allow disabling charging
+
+Hook up USBIN_CMD_IL so that writing "0" to the status register will
+disable charging, this is useful to let users limit charging
+automatically.
+
+Signed-off-by: Casey Connolly <casey.connolly@linaro.org>
+---
+ drivers/power/supply/qcom_smbx.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/power/supply/qcom_smbx.c b/drivers/power/supply/qcom_smbx.c
+index b1cb925581ec..fc2a8e204356 100644
+--- a/drivers/power/supply/qcom_smbx.c
++++ b/drivers/power/supply/qcom_smbx.c
+@@ -693,6 +693,9 @@ static int smb_set_property(struct power_supply *psy,
+ 	struct smb_chip *chip = power_supply_get_drvdata(psy);
+ 
+ 	switch (psp) {
++	case POWER_SUPPLY_PROP_STATUS:
++		return regmap_update_bits(chip->regmap, chip->base + USBIN_CMD_IL,
++					  USBIN_SUSPEND_BIT, !val->intval);
+ 	case POWER_SUPPLY_PROP_CURRENT_MAX:
+ 		return smb_set_current_limit(chip, val->intval);
+ 	default:
+@@ -705,6 +708,7 @@ static int smb_property_is_writable(struct power_supply *psy,
+ 				     enum power_supply_property psp)
+ {
+ 	switch (psp) {
++	case POWER_SUPPLY_PROP_STATUS:
+ 	case POWER_SUPPLY_PROP_CURRENT_MAX:
+ 		return 1;
+ 	default:
+-- 
+2.51.1
+
