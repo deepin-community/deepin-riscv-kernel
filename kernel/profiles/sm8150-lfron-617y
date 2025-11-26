@@ -1,0 +1,4 @@
+KERNEL_BRANCH=main
+KERNEL_DEFCONFIG="defconfig sm8150.config"
+KERNEL_GIT=https://github.com/LFRon/Linux-mainline-xanmod-nabu.git
+GCC_ARCH=aarch64
