@@ -28,6 +28,6 @@ esac
 
 export MAKE_EXEC="make ARCH=${MAKE_ARCH}"
 
-if [ "$CC_TYPE" == "llvm" ]; then
+if [ "$CC_TYPE" == "clang" ]; then
     export MAKE_EXEC="$MAKE_EXEC LLVM=1"
 fi

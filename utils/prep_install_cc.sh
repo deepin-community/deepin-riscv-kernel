@@ -18,5 +18,5 @@ fi
 fi
 
 if [ "$CC_TYPE" == "clang" ]; then
-    sudo apt install -y clang
+    sudo apt install -y clang lld llvm
 fi
