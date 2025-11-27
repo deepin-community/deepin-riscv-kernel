@@ -4,7 +4,6 @@ KERNEL_DEFCONFIG=revyos_defconfig
 KERNEL_EXTRA_CONFIGS=(common/cgroup common/bpf common/drivers common/network th1520-revyos/pvr-egl-workaround)
 KERNEL_PATCHES=(
 	th1520/display-revyos.patch
-	"https://github.com/zhmars/cjktty-patches/raw/refs/heads/master/v6.x/cjktty-6.6.patch"
 )
 
 function override_config() {
