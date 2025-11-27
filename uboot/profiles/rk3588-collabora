@@ -37,7 +37,7 @@ UBOOT_RESULT_FILENAMES=(
 	u-boot-rockchip-spi.bin
 	idbloader.img
 )
-GCC_ARCH=aarch64
+CC_ARCH=aarch64
 PKG_DEPS=(python3-pyelftools)
 NOCCACHE=1
 

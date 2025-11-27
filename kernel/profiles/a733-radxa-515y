@@ -1,4 +1,4 @@
-GCC_ARCH=aarch64
+CC_ARCH=aarch64
 KERNEL_GIT=https://github.com/radxa-pkg/linux-a733.git
 KERNEL_BRANCH=main
 KERNEL_DEFCONFIG="defconfig radxa.config radxa_custom.config bsp.config"
