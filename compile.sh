@@ -34,7 +34,7 @@ if [ "$ACTION_STAGE" != "compile" ]; then
 
 	# prepare stage
 	sudo apt update
-	exec_or_override ./utils/prep_install_gcc.sh
+	exec_or_override ./utils/prep_install_cc.sh
 	exec_or_override ./utils/prep_install_deps.sh
 	exec_or_override ./utils/prep_config.sh
 fi

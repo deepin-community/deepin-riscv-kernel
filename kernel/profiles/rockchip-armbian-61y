@@ -12,4 +12,4 @@ KERNEL_EXTRA_CONFIGS=(
   rockchip/firmware-compress
   rockchip/fan
 )
-GCC_ARCH=aarch64
+CC_ARCH=aarch64

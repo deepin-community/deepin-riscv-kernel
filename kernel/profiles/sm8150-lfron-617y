@@ -1,4 +1,12 @@
 KERNEL_BRANCH=main
 KERNEL_DEFCONFIG="defconfig sm8150.config"
 KERNEL_GIT=https://github.com/LFRon/Linux-mainline-nabu.git
-GCC_ARCH=aarch64
+CC_ARCH=aarch64
+CC_TYPE=clang
+
+function override_config() {
+	. $1
+	[ "CC_TYPE" == "clang" ] && \
+	  echo "CONFIG_LTO_CLANG=y" >> .config && \
+	  echo "CONFIG_LTO_CLANGF_FULL=y" >> .config
+}

@@ -5,7 +5,7 @@ PKG_DEPS=(
   gcc-arm-linux-gnueabi crossbuild-essential-armel
   dh-exec python3-setuptools python3-dev libgnutls28-dev python3-pyelftools xxd lib32stdc++6 lib32z1 dos2unix
 )
-GCC_ARCH=aarch64
+CC_ARCH=aarch64
 
 _MAKE_PROFILES=(radxa-cubie-a7a radxa-cubie-a7z)
 

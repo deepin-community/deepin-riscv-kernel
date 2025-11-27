@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ "$GCC_ARCH" != "$(arch)" ]; then
+if [ "$CC_ARCH" != "$(arch)" ]; then
   export DEB_BUILD_PROFILES="pkg.linux-upstream.nokernelheaders"
 else
   export KERNEL_ENABLE_MODULES=1

@@ -8,8 +8,10 @@
 
 - `GCC_VER`: gcc version to use
   - default: 12
-- `GCC_ARCH`: gcc arch
+- `CC_ARCH`: cc arch
   - default: riscv64
+- `CC_TYPE`: cc type
+  - default: gcc
 - `CROSS_COMPILE`: replace cross compile env
   - default: ${GCC\_ARCH}-linux-gnu-
 - `NOCCACHE`: ccache is not used
