@@ -4,6 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       profile:
+        description: profile name
         required: true
   workflow_call:
     inputs:
