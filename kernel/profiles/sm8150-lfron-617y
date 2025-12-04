@@ -8,5 +8,5 @@ function override_config() {
 	. $1
 	[ "CC_TYPE" == "clang" ] && \
 	  echo "CONFIG_LTO_CLANG=y" >> .config && \
-	  echo "CONFIG_LTO_CLANGF_FULL=y" >> .config
+	  echo "CONFIG_LTO_CLANG_FULL=y" >> .config
 }
