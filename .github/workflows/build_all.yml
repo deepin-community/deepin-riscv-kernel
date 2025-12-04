@@ -71,4 +71,4 @@ jobs:
           echo "host_bucket = ${{ secrets.CF_S3_HOST_BUCKET }}" >> .s3-cf.conf
           echo "bucket_location = auto" >> .s3-cf.conf
           echo "enable_multipart = False" >> .s3-cf.conf
-      - run: s3cmd --recursive -c ./.s3-cf.conf put artifacts-upload/* s3://deepin-ports-kernel/
+      - run: s3cmd --recursive -c ./.s3-cf.conf put artifacts-upload/* s3://deepin-ports-kernel/rolling/u-boot/
