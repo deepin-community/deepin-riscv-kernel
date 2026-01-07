@@ -1,0 +1,4 @@
+KERNEL_BRANCH=rpi-6.12.y
+KERNEL_GIT=https://github.com/raspberrypi/linux.git
+KERNEL_DEFCONFIG=bcm2712_defconfig
+CC_ARCH=aarch64
