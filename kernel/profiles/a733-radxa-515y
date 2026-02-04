@@ -45,6 +45,9 @@ function override_compile_env() {
 function override_config() {
 	pushd src
 		. $1
+		# multiple definition of `sunxi_jack_adv'
+		sed -i 's/CONFIG_SND_SOC_AC101=y/CONFIG_SND_SOC_AC101=m/' .config
+		sed -i 's/CONFIG_SND_SOC_AC101B=y/CONFIG_SND_SOC_AC101B=m/' .config
 	popd
 }
 
