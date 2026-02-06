@@ -1,0 +1,43 @@
+UBOOT_BRANCH=v2026.01
+UBOOT_DEFCONFIGS=(
+    anbernic-rgxx3-rk3566_defconfig
+    lckfb-tspi-rk3566_defconfig
+    nanopi-r3s-rk3566_defconfig
+    odroid-m1s-rk3566_defconfig
+    orangepi-3b-rk3566_defconfig
+    pinetab2-rk3566_defconfig
+    powkiddy-x55-rk3566_defconfig
+    quartz64-a-rk3566_defconfig
+    quartz64-b-rk3566_defconfig
+    radxa-cm3-io-rk3566_defconfig
+    radxa-zero-3-rk3566_defconfig
+    rock-3c-rk3566_defconfig
+    soquartz-blade-rk3566_defconfig
+    soquartz-cm4-rk3566_defconfig
+    soquartz-model-a-rk3566_defconfig
+)
+UBOOT_RESULT_FILENAMES=(
+	idbloader.img
+	u-boot.itb
+	u-boot-rockchip.bin
+	u-boot-rockchip-spi.bin
+)
+CC_ARCH=aarch64
+PKG_DEPS=(python3-pyelftools)
+NOCCACHE=1
+
+function override_clone() {
+	. $1
+	git clone --depth 1 https://github.com/rockchip-linux/rkbin.git work/rkbin
+	export ROCKCHIP_TPL=$(find $(pwd)/work/rkbin/bin/rk35/ -name "rk3566_ddr_*" | grep -v -e ultra -e eyescan | sort -r | head -n 1)
+	export BL31=$(find $(pwd)/work/rkbin/bin/rk35/ -name "rk3568_bl31_v*" | sort -r | head -n 1)
+}
+
+function override_compile() {
+	pushd ../rkbin
+		./tools/boot_merger RKBOOT/RK3566MINIALL.ini
+		find . -name "rk3566_spl_loader_*" | xargs -I @ cp -av @ $OUTPUT_DIR/
+	popd
+	
+    . $1
+}
