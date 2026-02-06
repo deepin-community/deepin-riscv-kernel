@@ -1,0 +1,5 @@
+KERNEL_BRANCH=asahi
+KERNEL_GIT=https://github.com/AsahiLinux/linux.git
+KERNEL_DEFCONFIG="defconfig asahi.config"
+CC_ARCH=aarch64
+KERNEL_EXTRA_CONFIGS=(common/cgroup common/bpf common/drivers common/network)
