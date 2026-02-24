@@ -11,6 +11,10 @@ function override_clone() {
 }
 
 function override_patch() {
+    pushd device-a733
+        patch -p1 < $BASEDIR/kernel/patches/a733/a7a-ac101.patch
+    popd
+
     # link bsp
 	ln -srf bsp src/bsp
 	
@@ -21,6 +25,7 @@ function override_patch() {
 	for _board in a7a a7s a7z; do
         ln -srf device-a733/configs/cubie_${_board}/linux-5.15/board.dts src/arch/arm64/boot/dts/allwinner/sun60i-a733-cubie-${_board}.dts
     done
+    ln -srf device-a733/configs/cubie_a7a/linux-5.15/board-ac101.dts src/arch/arm64/boot/dts/allwinner/sun60i-a733-cubie-a7a-ac101.dts
     cp -aR bsp/configs/linux-5.15/*.dtsi src/arch/arm64/boot/dts/allwinner
     cp -aR bsp/include/dt-bindings/. src/include/dt-bindings
     
