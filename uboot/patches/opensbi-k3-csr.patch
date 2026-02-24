@@ -1,0 +1,36 @@
+diff --git a/firmware/fw_base.S b/firmware/fw_base.S
+index 30493f0..23e6a21 100644
+--- a/firmware/fw_base.S
++++ b/firmware/fw_base.S
+@@ -13,6 +13,7 @@
+ #include <sbi/sbi_platform.h>
+ #include <sbi/sbi_scratch.h>
+ #include <sbi/sbi_trap.h>
++#include <spacemit/k3/core_common.h>
+ 
+ #define BOOT_LOTTERY_ACQUIRED		1
+ #define BOOT_STATUS_BOOT_HART_DONE	1
+@@ -314,12 +315,12 @@ _start_warm:
+ 	/*
+ 	 * enable core snoop
+ 	 */
+-	csrw	ml2setup, zero
++	csrw	CSR_ML2SETUP, zero
+ 	csrr	t0, CSR_MHARTID
+ 	andi	t1, t0, 3
+ 	li      a5, 1
+ 	sllw    a5, a5, t1
+-	csrs    ml2setup, a5
++	csrs    CSR_ML2SETUP, a5
+ 
+ 	/*
+ 	 *  enable dcache
+@@ -330,7 +331,7 @@ _start_warm:
+ 	 */
+ 	lui	a5, 0x10
+ 	addi	a5, a5, 115 # 10073
+-	csrs	msetup, a5
++	csrs	CSR_MSETUP, a5
+ 	fence	iorw, iorw
+ 
+ #ifdef CONFIG_PLATFORM_SPACEMIT_K3
