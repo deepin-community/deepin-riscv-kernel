@@ -34,6 +34,9 @@ function override_patch() {
 
     # add radxa patch
 	dh_quilt_patch
+	
+	# add ac101 dts
+	echo "dtb-$(CONFIG_ARCH_SUNXI) += sun60i-a733-cubie-a7a-ac101.dtb" >> src/arch/arm64/boot/dts/allwinner/Makefile
 
 	pushd src
 		ln -s bsp/modules modules

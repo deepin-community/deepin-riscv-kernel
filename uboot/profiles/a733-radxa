@@ -7,7 +7,7 @@ PKG_DEPS=(
 )
 CC_ARCH=aarch64
 
-_MAKE_PROFILES=(radxa-cubie-a7a radxa-cubie-a7z)
+_MAKE_PROFILES=(radxa-cubie-a7a radxa-cubie-a7a-ac101 radxa-cubie-a7z)
 
 function override_clone() {
 	export GIT_CLONE_PROTECTION_ACTIVE=false
@@ -31,6 +31,9 @@ function override_patch() {
           ufetch-2018.patch
         )
         . $1
+
+        cp ./configs/radxa-cubie-a7a_defconfig ./configs/radxa-cubie-a7a-ac101_defconfig
+        sed -i 's/sun60i-a733-cubie-a7a/sun60i-a733-cubie-a7a-ac101/' ./configs/radxa-cubie-a7a-ac101_defconfig
     popd
     
     UBOOT_PATCHES=(allwinner/radxa-use-system-arm-toolchain.patch)
@@ -63,6 +66,13 @@ function override_compile() {
     dd conv=notrunc,fsync if=/tmp/gpt.img of=src/sys_partition_nor.bin bs=512 count=34
 
     for _MAKE_PROFILE in ${_MAKE_PROFILES[@]}; do
+        if [ "${_MAKE_PROFILE}" == "radxa-cubie-a7a" ]; then
+            sed -i 's/sun60i-a733-cubie-a7a-ac101.dtb/sun60i-a733-cubie-a7a.dtb/' ./src/board/sunxi/cubie_board.c
+        fi
+        if [ "${_MAKE_PROFILE}" == "radxa-cubie-a7a-ac101" ]; then
+            sed -i 's/sun60i-a733-cubie-a7a.dtb/sun60i-a733-cubie-a7a-ac101.dtb/' ./src/board/sunxi/cubie_board.c
+        fi
+
         # make output dir
         mkdir -p out/${_MAKE_PROFILE}
     
