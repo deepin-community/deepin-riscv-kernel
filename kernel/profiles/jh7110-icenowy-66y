@@ -1,4 +1,0 @@
-KERNEL_BRANCH=star64-6.6
-KERNEL_GIT=https://github.com/Icenowy/linux.git
-KERNEL_DEFCONFIG=starfive_visionfive2_defconfig
-

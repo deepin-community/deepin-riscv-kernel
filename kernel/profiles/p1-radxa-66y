@@ -1,4 +1,4 @@
-KERNEL_BRANCH=ee8f6/48bff/cix_p1_K6.6_2025Q3_dev_patch
+KERNEL_BRANCH=cix_p1_K6.6_2025Q4_dev
 KERNEL_GIT=https://github.com/radxa/kernel.git
 KERNEL_DEFCONFIG="defconfig cix.config"
 CC_ARCH=aarch64

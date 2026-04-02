@@ -43,7 +43,6 @@
 ## Patches
 
 - `KERNEL_PATCHES`
-- `KERNEL_PATCHES_PROPRIETARY`
 
 ## Override Functions
 

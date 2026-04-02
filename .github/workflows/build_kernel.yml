@@ -11,9 +11,6 @@ on:
       profile:
         required: true
         type: string
-    secrets:
-        GIT_TOKEN:
-          required: false
 
 run-name: build kernel for ${{ inputs.profile }}
 
@@ -51,14 +48,7 @@ jobs:
           swap-storage: true
 
       - uses: actions/checkout@v4
-      - uses: actions/checkout@v4
-        env: 
-          ifsecret: ${{ secrets.GIT_TOKEN }}
-        if: ${{ env.ifsecret != '' }}
-        with:
-          repository: deepin-community/deepin-riscv-proprietary
-          token: ${{ secrets.GIT_TOKEN }}
-          path: proprietary-repo
+
       - name: "Prepare Stage"
         run: |
           ./compile.sh kernel ${{ inputs.profile }} prepare

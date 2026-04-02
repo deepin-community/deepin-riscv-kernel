@@ -15,14 +15,6 @@ if [ ${#KERNEL_PATCHES[@]} -ne 0 ]; then
         done
 fi
 
-if [ ${#KERNEL_PATCHES_PROPRIETARY[@]} -ne 0 ]; then
-        for patchfile in "${KERNEL_PATCHES_PROPRIETARY[@]}"; do
-                if [ -f $BASEDIR/proprietary-repo/kernel/patches/$patchfile ]; then
-                        patch -p1 < $BASEDIR/proprietary-repo/kernel/patches/$patchfile
-                fi
-        done
-fi
-
 if [ ! -z $KERNEL_BUILD_VERSION ]; then
 	echo "echo $KERNEL_BUILD_VERSION" > init/build-version
 	chmod -v +x init/build-version
