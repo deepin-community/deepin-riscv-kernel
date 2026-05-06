@@ -1,8 +1,8 @@
 GCC_VER=13
 UBOOT_BRANCH=k3-br-v1.0.y
 UBOOT_SBI_BRANCH=k3-br-v1.0.y
-UBOOT_GIT=https://git.spacemit.com/buildroot-k3/uboot.git
-UBOOT_SBI_GIT=https://git.spacemit.com/buildroot-k3/opensbi.git
+UBOOT_GIT=https://gitee.com/spacemit-buildroot/uboot-2022.10.git
+UBOOT_SBI_GIT=https://gitee.com/spacemit-buildroot/opensbi.git
 UBOOT_SBI_PLATFORM_DEFCONFIG=k3_defconfig
 UBOOT_DEFCONFIGS=(k3_defconfig)
 UBOOT_SBI=1
