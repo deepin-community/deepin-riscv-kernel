@@ -1,0 +1,32 @@
+On RISC-V 64-bit Ubuntu 24.04 Server (Running on QEMU), the following error might occur when compiling perf:
+
+cpumap.c: In function ‘perf_cpu_map__merge’:
+cpumap.c:429:20: error: argument 1 range [18446744069414584320, 18446744073709551614] exceeds maximum object size 9223372036854775807 [-Werror=alloc-size-larger-than=]
+  429 |         tmp_cpus = malloc(tmp_len * sizeof(struct perf_cpu));
+      |                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from cpumap.c:4:
+/usr/include/stdlib.h:672:14: note: in a call to allocation function ‘malloc’ declared here
+  672 | extern void *malloc (size_t __size) __THROW __attribute_malloc__
+      |              ^~~~~~
+cc1: all warnings being treated as errors
+
+We use the volatile qualifier to prevent unnecessary errors caused by the compiler's constant propagation.
+---
+ tools/lib/perf/cpumap.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/tools/lib/perf/cpumap.c b/tools/lib/perf/cpumap.c
+index 4160e7d2e120..ccf473994111 100644
+--- a/tools/lib/perf/cpumap.c
++++ b/tools/lib/perf/cpumap.c
+@@ -410,7 +410,7 @@ bool perf_cpu_map__is_subset(const struct perf_cpu_map *a, const struct perf_cpu
+ int perf_cpu_map__merge(struct perf_cpu_map **orig, struct perf_cpu_map *other)
+ {
+ 	struct perf_cpu *tmp_cpus;
+-	int tmp_len;
++	volatile int tmp_len;
+ 	int i, j, k;
+ 	struct perf_cpu_map *merged;
+ 
+-- 
+2.43.0
