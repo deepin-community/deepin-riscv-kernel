@@ -1,5 +1,5 @@
 KERNEL_BRANCH=linux-7.0.2
 KERNEL_GIT=https://github.com/radxa/kernel.git
 KERNEL_DEFCONFIG=qcom_module_defconfig
-KERNEL_PATCHES=(q6a/fix-deepin-runparts.patch)
+KERNEL_PATCHES=(qcom/fix-deepin-runparts.patch)
 CC_ARCH=aarch64
