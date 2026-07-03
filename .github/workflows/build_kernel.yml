@@ -22,7 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - id: output
-        run: source kernel/profiles/${{ inputs.profile }} && [ "$CC_ARCH" == "aarch64" ] && echo "runson=ubuntu-24.04-arm" >> "$GITHUB_OUTPUT" || true
+        run: source kernel/profiles/${{ inputs.profile }} && if [ "$CC_ARCH" == "aarch64" ]; then if [ "$GCC_VER" -ge 15 ]; then echo "runson=ubuntu-26.04-arm" >> "$GITHUB_OUTPUT"; else echo "runson=ubuntu-24.04-arm" >> "$GITHUB_OUTPUT"; fi; else if [ "$GCC_VER" -ge 15 ]; then echo "runson=ubuntu-26.04" >> "$GITHUB_OUTPUT"; fi; fi || true
 
   build-kernel:
     needs: select-buildhost
