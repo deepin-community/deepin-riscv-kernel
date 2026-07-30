@@ -31,3 +31,6 @@ export MAKE_EXEC="make ARCH=${MAKE_ARCH}"
 if [ "$CC_TYPE" == "clang" ]; then
     export MAKE_EXEC="$MAKE_EXEC LLVM=1"
 fi
+
+# ensure exported
+export CROSS_COMPILE="${CROSS_COMPILE}"

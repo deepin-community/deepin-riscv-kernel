@@ -16,6 +16,8 @@
   - default: ${GCC\_ARCH}-linux-gnu-
 - `NOCCACHE`: ccache is not used
   - default: (unset)
+- `TOOLCHAIN`: external toolchain
+  - default: (unset)
 
 ## Git
 

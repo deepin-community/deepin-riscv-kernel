@@ -14,6 +14,8 @@
   - default: gcc
 - `CROSS_COMPILE`: replace cross compile env
   - default: ${CC_ARCH}-linux-gnu-
+- `TOOLCHAIN`: external toolchain
+  - default: (unset)
 
 ## Git
 
