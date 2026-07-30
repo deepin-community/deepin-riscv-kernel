@@ -29,7 +29,8 @@ function override_config() {
 
 	echo CONFIG_CMD_UFETCH=y >> configs/k3_defconfig
 	# for extra ufetch size
-	echo CONFIG_SPL_SIZE_LIMIT=0x73F00 >> configs/k3_defconfig
+    echo CONFIG_SPL_SIZE_LIMIT=0x76000 >> configs/k3_defconfig
+    echo CONFIG_SPL_MAX_SIZE=0x78F00 >> configs/k3_defconfig
 }
 
 function override_patch() {

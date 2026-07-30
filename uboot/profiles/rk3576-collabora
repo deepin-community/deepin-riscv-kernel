@@ -15,7 +15,6 @@ UBOOT_RESULT_FILENAMES=(
 	u-boot-rockchip-spi.bin
 )
 UBOOT_PATCHES=(
-  rockchip/dshanpi-dts.patch
   rockchip/dshanpi-config.patch
 )
 CC_ARCH=aarch64
