@@ -23,6 +23,7 @@ function override_patch() {
 
 	# fix: conflict modules
 	sed -i 's/CONFIG_SENSOR_IMX219=m/CONFIG_SENSOR_IMX219=n/g' device-a733/configs/default/linux-5.15/bsp_defconfig
+	sed -i 's/CONFIG_SENSOR_IMX214=m/CONFIG_SENSOR_IMX214=n/g' device-a733/configs/default/linux-5.15/bsp_defconfig
 	
 	# copy dts
 	for _board in a7a a7s a7z; do
