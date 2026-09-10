@@ -26,7 +26,10 @@ UBOOT_SBI_RESULT_FILENAMES=(
   fw_jump.bin
 )
 PKG_DEPS=(u-boot-tools scons)
-TOOLCHAIN=(https://archive.spacemit.com/toolchain/spacemit-toolchain-linux-glibc-x86_64-v1.2.4.tar.xz)
+TOOLCHAIN=(
+  https://archive.spacemit.com/toolchain/spacemit-toolchain-linux-glibc-x86_64-v1.2.4.tar.xz
+  https://archive.spacemit.com/toolchain/spacemit-toolchain-elf-newlib-x86_64-v1.2.4.tar.xz
+)
 CROSS_COMPILE=riscv64-unknown-linux-gnu-
 
 function override_clone() {
