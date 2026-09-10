@@ -2,6 +2,7 @@ CC_TYPE=none
 UBOOT_BRANCH=k3-br-v1.0.y
 UBOOT_SBI_BRANCH=k3-br-v1.0.y
 ESOS_BRANCH=k3-br-v1.0.y
+ESOS_LITE_BRANCH=k3-br-v1.0.y
 UBOOT_GIT=https://github.com/spacemit-com/uboot-2022.10.git
 UBOOT_SBI_GIT=https://github.com/spacemit-com/opensbi.git
 ESOS_GIT=https://github.com/spacemit-com/esos.git
@@ -24,7 +25,7 @@ UBOOT_SBI_RESULT_FILENAMES=(
   fw_payload.bin
   fw_jump.bin
 )
-PKG_DEPS=(u-boot-tools)
+PKG_DEPS=(u-boot-tools scons)
 TOOLCHAIN=(https://archive.spacemit.com/toolchain/spacemit-toolchain-linux-glibc-x86_64-v1.2.4.tar.xz)
 CROSS_COMPILE=riscv64-unknown-linux-gnu-
 
