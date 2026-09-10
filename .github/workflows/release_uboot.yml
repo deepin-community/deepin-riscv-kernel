@@ -10,8 +10,6 @@ on:
 jobs:
   build-uboot:
     uses: ./.github/workflows/build_uboot.yml
-    secrets:
-      GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
     with:
       profile: ${{ inputs.profile }}
 
