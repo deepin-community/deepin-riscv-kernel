@@ -25,7 +25,7 @@ UBOOT_SBI_RESULT_FILENAMES=(
   fw_payload.bin
   fw_jump.bin
 )
-PKG_DEPS=(u-boot-tools scons)
+PKG_DEPS=(u-boot-tools scons lzop)
 TOOLCHAIN=(
   https://archive.spacemit.com/toolchain/spacemit-toolchain-linux-glibc-x86_64-v1.2.4.tar.xz
   https://archive.spacemit.com/toolchain/spacemit-toolchain-elf-newlib-x86_64-v1.2.4.tar.xz
