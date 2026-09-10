@@ -1,6 +1,6 @@
 GCC_VER=15
 KERNEL_BRANCH=k3-br-v1.0.y
-KERNEL_GIT=https://gitee.com/spacemit-buildroot/linux-6.18.git
+KERNEL_GIT=https://github.com/spacemit-com/linux-6.18.git
 KERNEL_DEFCONFIG="k3_defconfig k3_bianbu_defconfig"
 PKG_DEPS=(python-dev-is-python3 asciidoc rsync)
 KERNEL_PATCHES=(
