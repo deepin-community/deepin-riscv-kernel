@@ -1,8 +1,11 @@
 CC_TYPE=none
 UBOOT_BRANCH=k3-br-v1.0.y
 UBOOT_SBI_BRANCH=k3-br-v1.0.y
-UBOOT_GIT=https://gitee.com/spacemit-buildroot/uboot-2022.10.git
-UBOOT_SBI_GIT=https://gitee.com/spacemit-buildroot/opensbi.git
+ESOS_BRANCH=k3-br-v1.0.y
+UBOOT_GIT=https://github.com/spacemit-com/uboot-2022.10.git
+UBOOT_SBI_GIT=https://github.com/spacemit-com/opensbi.git
+ESOS_GIT=https://github.com/spacemit-com/esos.git
+ESOS_LITE_GIT=https://github.com/spacemit-com/esos-lite.git
 UBOOT_SBI_PLATFORM_DEFCONFIG=k3_defconfig
 UBOOT_DEFCONFIGS=(k3_defconfig)
 UBOOT_SBI=1
@@ -24,3 +27,25 @@ UBOOT_SBI_RESULT_FILENAMES=(
 PKG_DEPS=(u-boot-tools)
 TOOLCHAIN=(https://archive.spacemit.com/toolchain/spacemit-toolchain-linux-glibc-x86_64-v1.2.4.tar.xz)
 CROSS_COMPILE=riscv64-unknown-linux-gnu-
+
+function override_clone() {
+    . $1
+	git clone --recurse-submodules --depth=1 -b "$ESOS_BRANCH" "$ESOS_GIT" work/esos
+	git clone --recurse-submodules --depth=1 -b "$ESOS_LITE_BRANCH" "$ESOS_LITE_GIT" work/esos/components/esos-lite
+}
+
+function override_compile() {
+    pushd ../esos
+        echo "export TOP_TARGET_CHIP=rt24" > bsp/spacemit/.esos_top.config
+        touch bsp/spacemit/rtconfig.h
+        
+        TOP_OUTPUT_DIR="$PWD/output/esos" \
+        RTT_EXEC_PATH=/usr/bin \
+        RTT_LIB_PATH="$PWD/debian/lib" \
+        ./build_top.sh
+
+        cp output/esos/esos.itb $OUTPUT_DIR/
+    popd
+
+    . $1
+}
