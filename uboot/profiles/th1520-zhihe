@@ -1,0 +1,6 @@
+UBOOT_BRANCH=cloudbook-deepin
+UBOOT_GIT=https://github.com/godzilia/u-boot-2020.10.git
+UBOOT_DEFCONFIGS=(
+	 light_lpi4a_sec_defconfig
+)
+UBOOT_RESULT_FILENAMES=(u-boot-with-spl.bin)
